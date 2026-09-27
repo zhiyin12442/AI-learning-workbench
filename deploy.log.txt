@@ -1,2 +1,11 @@
 [2026/09/28/��һ  0:58:14.14] ===== deploy start ===== 
 [OK] git found. 
+warning: in the working copy of 'deploy.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '部署指引.md', LF will be replaced by CRLF the next time Git touches it
+[main 981c8eb] update nexdo
+ 3 files changed, 41 insertions(+), 43 deletions(-)
+ create mode 100644 deploy.log.txt
+[....] Pushing to GitHub... 
+To https://github.com/zhiyin12442/AI-learning-workbench.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
