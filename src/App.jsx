@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar, { MobileTabBar } from './components/Sidebar'
 import { Toast } from './components/ui'
 import { useState } from 'react'
+import { useData } from './lib/store'
 import Dashboard from './pages/Dashboard'
 import Concepts from './pages/Concepts'
 import StudyLog from './pages/StudyLog'
@@ -12,6 +13,7 @@ import Reviews, { ReviewEditor } from './pages/Reviews'
 
 function Shell() {
   const [mobileNav, setMobileNav] = useState(false)
+  const { toast } = useData()
   return (
     <div className="app-bg min-h-screen flex justify-center p-0 md:p-5 pb-20 lg:pb-5">
       <div className="app-container w-full max-w-[1400px] bg-workspace-bg rounded-app shadow-app flex overflow-hidden h-auto xl:h-[860px] md:min-h-[calc(100vh-2.5rem)]">
