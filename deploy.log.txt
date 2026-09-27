@@ -1,8 +1,2 @@
-[2026/09/28/周一  1:11:42.74] ===== deploy start ===== 
+[2026/09/28/周一  1:38:29.66] ===== deploy start ===== 
 [OK] git found. 
-[main 9fb588e] update nexdo
- 1 file changed, 1 insertion(+), 10 deletions(-)
-[....] Pushing to GitHub... 
-To https://github.com/zhiyin12442/AI-learning-workbench.git
-   981c8eb..9fb588e  main -> main
-branch 'main' set up to track 'origin/main'.
