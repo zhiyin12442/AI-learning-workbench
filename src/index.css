@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-app-bg text-ink font-sans antialiased;
+  }
+  input, textarea, select {
+    @apply rounded-[10px] border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-all duration-200;
+  }
+  input:focus, textarea:focus, select:focus {
+    @apply border-primary ring-2 ring-primary/10;
+  }
+  button {
+    @apply rounded-[10px] transition-all duration-200;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white text-sm font-medium px-4 py-2 hover:bg-primary/90 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply bg-white border border-gray-200 text-ink-soft text-sm px-4 py-2 hover:bg-gray-50 active:scale-[0.98];
+  }
+  .card {
+    /* 常驻静态阴影：方向性右下偏移，不随悬停变化 */
+    @apply bg-card rounded-card shadow-card;
+  }
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #D7DBE2; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #C2C8D2; }
+::-webkit-scrollbar-track { background: transparent; }

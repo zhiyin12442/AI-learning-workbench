@@ -1,0 +1,16 @@
+# 依赖与构建产物（Cloudflare 会自动 npm install + 构建，无需提交）
+node_modules
+dist
+
+# 含密钥的本地环境文件（密钥改在 Cloudflare 构建设置里配置，不入库）
+.env
+.env.local
+.env.*.local
+
+# 日志与临时文件
+*.log
+npm-debug.log*
+preview-*.png
+.DS_Store
+.idea
+.vscode
