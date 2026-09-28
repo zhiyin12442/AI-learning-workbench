@@ -12,7 +12,7 @@ const itemCls = ({ isActive }) =>
   (isActive ? ' bg-white shadow-nav-active text-gray-900 font-semibold' : '')
 
 function SyncCard() {
-  const { wsId, cloudReady, changeWorkspace, resetWorkspace } = useData()
+  const { wsId, cloudReady, changeWorkspace, resetWorkspace, readOnly, setReadOnlyMode, canDelete } = useData()
   const [open, setOpen] = useState(false)
   const [joinVal, setJoinVal] = useState('')
   const [joinErr, setJoinErr] = useState('')
@@ -107,6 +107,24 @@ function SyncCard() {
               <p className="text-xs text-ink-faint mt-3">
                 尚未配置 Supabase，当前为本地模式。在 .env 填入 VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY 后重新部署即可启用云端同步。
               </p>
+            )}
+
+            {/* 删除权限：只读模式开启后，所有模块的删除入口都会被隐藏 */}
+            <label className="flex items-center justify-between gap-3 mt-4 p-3 rounded-[10px] bg-gray-50 cursor-pointer select-none">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-800">只读模式</p>
+                <p className="text-xs text-ink-faint">开启后禁止删除任何内容（防误删）</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={readOnly}
+                onChange={(e) => setReadOnlyMode(e.target.checked)}
+                className="w-5 h-5 accent-danger cursor-pointer shrink-0"
+                aria-label="只读模式（禁止删除）"
+              />
+            </label>
+            {!canDelete && (
+              <p className="text-xs text-danger mt-2">当前为只读模式，删除功能已禁用。</p>
             )}
           </div>
         </div>

@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Link as LinkIcon, Search } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, Highlight, EmptyState, useHighlightTarget } from '../components/ui'
+import { Modal, Field, Highlight, EmptyState, useHighlightTarget, ConfirmDialog } from '../components/ui'
 
 const ACCENTS = ['#286ED3', '#4D3EB4', '#84CC16', '#F59E0B', '#EF4444', '#38BDF8']
 
 export default function Concepts() {
-  const { data, upsert, remove, showToast } = useData()
+  const { data, upsert, remove, canDelete, showToast } = useData()
   const concepts = data.concepts || []
   const [kw, setKw] = useState('')
   const [openGroups, setOpenGroups] = useState(null) // null=全部展开
@@ -15,6 +15,7 @@ export default function Concepts() {
   const [expanded, setExpanded] = useState({})
   const [editing, setEditing] = useState(null) // null | {} | concept
   const [renaming, setRenaming] = useState(null)
+  const [confirm, setConfirm] = useState(null) // { kind:'concept'|'group', table, id, name }
   const [activeGroup, setActiveGroup] = useState('全部')
   const hlId = useHighlightTarget()
 
@@ -89,12 +90,7 @@ export default function Concepts() {
                   <div className="hidden group-hover:flex">
                     <button onClick={() => setRenaming({ group: g })} className="p-1 text-ink-faint hover:text-primary" aria-label="重命名分组"><Pencil size={13} /></button>
                     <button
-                      onClick={() => {
-                        if (confirm(`删除分组「${g}」？组内概念将归入「未分组」。`)) {
-                          concepts.filter((c) => (c.group_name || '未分组') === g).forEach((c) => upsert('concepts', { ...c, group_name: '未分组' }))
-                          showToast(`分组「${g}」已删除。`)
-                        }
-                      }}
+                      onClick={() => setConfirm({ kind: 'group', name: g })}
                       className="p-1 text-ink-faint hover:text-danger" aria-label="删除分组"
                     ><Trash2 size={13} /></button>
                   </div>
@@ -168,7 +164,9 @@ export default function Concepts() {
                             <td className="py-3.5 pr-4 align-top">
                               <div className="flex justify-end gap-1">
                                 <button onClick={() => setEditing(c)} className="p-2 text-ink-faint hover:text-primary min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="编辑"><Pencil size={15} /></button>
-                                <button onClick={() => { remove('concepts', c.id); showToast('概念已删除。') }} className="p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="删除"><Trash2 size={15} /></button>
+                                {canDelete && (
+                                  <button onClick={() => setConfirm({ kind: 'concept', table: 'concepts', id: c.id, name: c.name })} className="p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="删除"><Trash2 size={15} /></button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -214,6 +212,24 @@ export default function Concepts() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.kind === 'group' ? '删除分组' : '删除概念'}
+        message={confirm?.kind === 'group' ? '组内概念将一并归入「未分组」，确定删除该分组吗？' : '删除后无法恢复，确定要删除这条概念吗？'}
+        itemName={confirm?.name}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => {
+          if (confirm.kind === 'group') {
+            concepts.filter((c) => (c.group_name || '未分组') === confirm.name).forEach((c) => upsert('concepts', { ...c, group_name: '未分组' }))
+            showToast(`分组「${confirm.name}」已删除。`)
+          } else {
+            remove(confirm.table, confirm.id)
+            showToast('概念已删除。')
+          }
+          setConfirm(null)
+        }}
+      />
     </div>
   )
 }

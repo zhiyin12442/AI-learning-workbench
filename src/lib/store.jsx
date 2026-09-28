@@ -4,8 +4,11 @@ import { SEED } from './seed'
 
 const LS_DATA = 'nexdo-data'
 const LS_PENDING = 'nexdo-pending'
+const LS_DELETES = 'nexdo-deletes'
 // 升级 key 以丢弃旧版本的随机同步码，强制所有设备回到共享工作区，开箱即自动同步
 const LS_WS = 'nexdo-wsid-v2'
+// 只读模式：开启后禁止删除任何内容（防误删 / 权限控制）
+const LS_READONLY = 'nexdo-readonly'
 
 const DataCtx = createContext(null)
 export const useData = () => useContext(DataCtx)
@@ -44,6 +47,9 @@ export function DataProvider({ children }) {
   const [cloudReady, setCloudReady] = useState(false)
   const [data, setData] = useState(() => loadLocal() || JSON.parse(JSON.stringify(SEED)))
   const [toast, setToast] = useState(null)
+  const [readOnly, setReadOnly] = useState(() => {
+    try { return localStorage.getItem(LS_READONLY) === '1' } catch { return false }
+  })
   const dirty = useRef(new Set())
   const timer = useRef(null)
   const pendingRef = useRef([])
@@ -66,6 +72,7 @@ export function DataProvider({ children }) {
         return merged
       })
       flushPending(wsId)
+      flushDeletes(wsId)
       setCloudReady(true)
     })()
     return () => { cancelled = true }
@@ -85,8 +92,22 @@ export function DataProvider({ children }) {
     }
     localStorage.setItem(LS_PENDING, JSON.stringify(rest))
   }
+  // 待补发的删除队列（离线/弱网时删除，恢复后真正从云端移除）
+  function readDeletes() {
+    try { return JSON.parse(localStorage.getItem(LS_DELETES) || '[]') } catch { return [] }
+  }
+  async function flushDeletes(workspaceId) {
+    const items = readDeletes()
+    if (!items.length || !supabase) return
+    const rest = []
+    for (const it of items) {
+      const { error } = await supabase.from(it.table).delete().eq('id', it.id).eq('user_id', workspaceId)
+      if (error) rest.push(it)
+    }
+    localStorage.setItem(LS_DELETES, JSON.stringify(rest))
+  }
   useEffect(() => {
-    const onOnline = () => { if (isSupabaseConfigured) flushPending(wsId) }
+    const onOnline = () => { if (isSupabaseConfigured) { flushPending(wsId); flushDeletes(wsId) } }
     window.addEventListener('online', onOnline)
     return () => window.removeEventListener('online', onOnline)
   }, [wsId])
@@ -129,11 +150,53 @@ export function DataProvider({ children }) {
     schedule()
   }, [schedule])
 
-  const remove = useCallback((table, id) => {
-    setData((prev) => ({ ...prev, [table]: (prev[table] || []).filter((r) => r.id !== id) }))
+  // ---------- 删除（真实后端删除 + 关联数据清理） ----------
+  const remove = useCallback(async (table, id) => {
+    // 权限门：只读模式下任何删除都被拦截
+    if (readOnly) return
+
+    // 关联数据清理（关联以数组/文本内嵌、并非数据库外键，故在应用层联级处理）
+    setData((prev) => {
+      const rows = prev[table] || []
+      const target = rows.find((r) => r.id === id)
+      const merged = { ...prev, [table]: rows.filter((r) => r.id !== id) }
+      if (table === 'resources' && target?.name) {
+        merged.project_ideas = (prev.project_ideas || []).map((p) =>
+          (p.required_skills || []).includes(target.name)
+            ? { ...p, required_skills: p.required_skills.filter((s) => s !== target.name) }
+            : p
+        )
+        dirty.current.add('project_ideas')
+      }
+      if (table === 'project_ideas' && target?.name) {
+        merged.reviews = (prev.reviews || []).map((rv) =>
+          (rv.linked_items || []).includes(target.name)
+            ? { ...rv, linked_items: rv.linked_items.filter((s) => s !== target.name) }
+            : rv
+        )
+        dirty.current.add('reviews')
+      }
+      return merged
+    })
     dirty.current.add(table)
     schedule()
-  }, [schedule])
+
+    // 后端真实删除：按 id + 工作区隔离，避免误删其它工作区数据
+    if (!isSupabaseConfigured) return
+    const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', wsId)
+    if (error) {
+      // 删除失败（弱网/离线）则入队，待恢复后由 flushDeletes 补发
+      const pend = readDeletes()
+      pend.push({ table, id })
+      localStorage.setItem(LS_DELETES, JSON.stringify(pend))
+    }
+  }, [schedule, wsId, readOnly])
+
+  // 只读模式开关（权限控制：开启后禁止删除）
+  const setReadOnlyMode = useCallback((v) => {
+    try { localStorage.setItem(LS_READONLY, v ? '1' : '0') } catch { /* ignore */ }
+    setReadOnly(!!v)
+  }, [])
 
   // 切换到自定义工作区（高级用法：想隔离一份独立数据时才用）
   const changeWorkspace = useCallback((newId) => {
@@ -158,7 +221,7 @@ export function DataProvider({ children }) {
   }, [])
 
   return (
-    <DataCtx.Provider value={{ wsId, cloudReady, isSupabaseConfigured, data, upsert, remove, changeWorkspace, resetWorkspace, showToast, toast }}>
+    <DataCtx.Provider value={{ wsId, cloudReady, isSupabaseConfigured, data, upsert, remove, changeWorkspace, resetWorkspace, setReadOnlyMode, readOnly, canDelete: !readOnly, showToast, toast }}>
       {children}
     </DataCtx.Provider>
   )

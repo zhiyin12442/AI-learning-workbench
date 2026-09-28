@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, ExternalLink, Pin } from 'lucide-react'
 import { useData } from '../lib/store'
-import { EmptyState, StatusPill } from '../components/ui'
+import { EmptyState, StatusPill, ConfirmDialog } from '../components/ui'
 import { format } from 'date-fns'
 
 export default function ProjectIdeaDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { data, upsert, showToast } = useData()
+  const { data, upsert, remove, canDelete, showToast } = useData()
   const project = (data.project_ideas || []).find((p) => p.id === id)
 
   if (!project) {
@@ -25,6 +25,8 @@ export default function ProjectIdeaDetail() {
   const pct = steps.length ? Math.round((done / steps.length) * 100) : 0
   const [newStep, setNewStep] = useState('')
   const [notes, setNotes] = useState(project.notes || '')
+  const [confirm, setConfirm] = useState(null) // 删除整个项目
+  const [confirmStep, setConfirmStep] = useState(null) // 删除某一步骤的索引
 
   const setProject = (patch) => upsert('project_ideas', { ...project, ...patch })
 
@@ -54,9 +56,19 @@ export default function ProjectIdeaDetail() {
             </div>
             <p className="text-sm text-ink-soft mt-2 max-w-xl">{project.goal || '还没有写一句话目标。'}</p>
           </div>
-          <div className="text-xs text-ink-faint text-right leading-relaxed">
-            <p>创建于 {project.created_at ? format(new Date(project.created_at), 'yyyy-MM-dd HH:mm') : '—'}</p>
-            <p>更新于 {project.updated_at ? format(new Date(project.updated_at), 'yyyy-MM-dd HH:mm') : '—'}</p>
+          <div className="flex flex-col items-end gap-2">
+            <div className="text-xs text-ink-faint text-right leading-relaxed">
+              <p>创建于 {project.created_at ? format(new Date(project.created_at), 'yyyy-MM-dd HH:mm') : '—'}</p>
+              <p>更新于 {project.updated_at ? format(new Date(project.updated_at), 'yyyy-MM-dd HH:mm') : '—'}</p>
+            </div>
+            {canDelete && (
+              <button
+                onClick={() => setConfirm({ id: project.id, name: project.name })}
+                className="inline-flex items-center gap-1.5 rounded-[10px] border border-danger/30 text-danger text-xs font-medium px-3 py-1.5 hover:bg-danger/5 min-h-[36px]"
+              >
+                <Trash2 size={14} /> 删除项目
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -86,7 +98,9 @@ export default function ProjectIdeaDetail() {
                   className="w-5 h-5 accent-success cursor-pointer shrink-0"
                 />
                 <span className={'flex-1 text-sm py-2 min-h-[44px] flex items-center ' + (s.done ? 'text-ink-faint line-through' : 'text-gray-700')}>{s.text}</span>
-                <button onClick={() => setProject({ steps: steps.filter((_, j) => j !== i) })} className="p-2 text-ink-faint hover:text-danger opacity-0 group-hover:opacity-100 min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="删除步骤"><Trash2 size={14} /></button>
+                {canDelete && (
+                  <button onClick={() => setConfirmStep(i)} className="p-2 text-ink-faint hover:text-danger opacity-0 group-hover:opacity-100 min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="删除步骤"><Trash2 size={14} /></button>
+                )}
               </li>
             ))}
           </ul>
@@ -147,6 +161,24 @@ export default function ProjectIdeaDetail() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="删除项目"
+        message="删除后无法恢复，项目下的步骤、参考资料、进度备注都会一并清除。确定要删除吗？"
+        itemName={confirm?.name}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => { remove('project_ideas', confirm.id); showToast('项目已删除。'); nav('/projects') }}
+      />
+
+      <ConfirmDialog
+        open={confirmStep !== null}
+        title="删除步骤"
+        message="确定要删除这一步吗？"
+        itemName={confirmStep !== null ? steps[confirmStep]?.text : ''}
+        onCancel={() => setConfirmStep(null)}
+        onConfirm={() => { setProject({ steps: steps.filter((_, j) => j !== confirmStep) }); setConfirmStep(null) }}
+      />
     </div>
   )
 }

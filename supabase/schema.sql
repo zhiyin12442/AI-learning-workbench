@@ -109,3 +109,20 @@ drop trigger if exists trg_project_ideas_updated on project_ideas;
 create trigger trg_project_ideas_updated before update on project_ideas for each row execute function set_updated_at();
 drop trigger if exists trg_reviews_updated on reviews;
 create trigger trg_reviews_updated before update on reviews for each row execute function set_updated_at();
+
+-- ===== 删除权限（服务端强制，可选） =====
+-- 当前为「免登录共享工作区」模式：RLS 已关闭、匿名 key 可读写，
+-- 删除由应用层只读开关（nexdo-readonly）控制，并在前端拦截。
+-- 若日后启用 Supabase Auth 做真正的「仅有权限用户可删除」，可按如下启用 RLS：
+--
+--   alter table concepts enable row level security;
+--   alter table study_logs enable row level security;
+--   alter table resources enable row level security;
+--   alter table project_ideas enable row level security;
+--   alter table reviews enable row level security;
+--
+--   create policy "owner_can_delete" on concepts
+--     for delete using (auth.uid() = owner_id);   -- 其它表同理，按 owner/auth 角色判断
+--
+-- 启用后，匿名 key 将无法删除，必须由已登录且具备权限的会话调用。
+-- 删除逻辑本身已在应用层通过 supabase.from(table).delete().eq('id', id).eq('user_id', wsId) 完成。

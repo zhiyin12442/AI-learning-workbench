@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Plus, ExternalLink, Search } from 'lucide-react'
+import { Plus, ExternalLink, Search, Trash2 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, EmptyState } from '../components/ui'
+import { Modal, Field, EmptyState, ConfirmDialog } from '../components/ui'
 
 const TABS = [
   { key: 'skill', label: 'Skills' },
@@ -11,11 +11,12 @@ const TABS = [
 ]
 
 export default function Resources() {
-  const { data, upsert, remove, showToast } = useData()
+  const { data, upsert, remove, canDelete, showToast } = useData()
   const [tab, setTab] = useState('skill')
   const [onlyUninstalled, setOnlyUninstalled] = useState(false)
   const [kw, setKw] = useState('')
   const [adding, setAdding] = useState(false)
+  const [confirm, setConfirm] = useState(null) // { id, name }
 
   const rows = (data.resources || [])
     .filter((r) => r.category === tab)
@@ -79,14 +80,15 @@ export default function Resources() {
         </div>
       ) : (
         <div className="card overflow-hidden">
-          <div className="grid grid-cols-[1fr_1fr_1fr_auto] px-4 py-3 text-xs text-ink-faint border-b border-line bg-gray-50/50">
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] px-4 py-3 text-xs text-ink-faint border-b border-line bg-gray-50/50">
             <span className="font-medium">名称</span>
             <span className="font-medium">链接</span>
             <span className="font-medium">具体概念 / 方案</span>
             {tab === 'skill' && <span className="font-medium text-center pr-1">已安装</span>}
+            {canDelete && <span className="font-medium text-right pr-1">操作</span>}
           </div>
           {rows.map((r) => (
-            <div key={r.id} className="grid grid-cols-[1fr_1fr_1fr_auto] items-center border-b border-line last:border-0 hover:bg-gray-50/60">
+            <div key={r.id} className="grid grid-cols-[1fr_1fr_1fr_auto_auto] items-center border-b border-line last:border-0 hover:bg-gray-50/60">
               <span className={colCls + ' font-medium text-gray-800 truncate'}>{r.name}</span>
               <span className={colCls + ' truncate'}>
                 {r.url ? (
@@ -105,6 +107,11 @@ export default function Resources() {
                     className="w-5 h-5 accent-success cursor-pointer"
                     aria-label="是否已安装"
                   />
+                </span>
+              )}
+              {canDelete && (
+                <span className={colCls + ' flex justify-end pr-4'}>
+                  <button onClick={() => setConfirm({ id: r.id, name: r.name })} className="p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="删除"><Trash2 size={15} /></button>
                 </span>
               )}
             </div>
@@ -132,6 +139,15 @@ export default function Resources() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="删除资源"
+        message="删除后无法恢复，确定要删除这条资源吗？它也会被同时从关联项目的「所需 Skills」中移除。"
+        itemName={confirm?.name}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => { remove('resources', confirm.id); showToast('资源已删除。'); setConfirm(null) }}
+      />
     </div>
   )
 }

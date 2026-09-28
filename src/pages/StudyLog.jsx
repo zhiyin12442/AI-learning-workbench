@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Plus, Download, Flame } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Download, Flame, Trash2 } from 'lucide-react'
 import { useData, computeStats } from '../lib/store'
 import { Header } from '../components/Header'
-import { StatCard, Modal, Field, TagPill, EmptyState } from '../components/ui'
+import { StatCard, Modal, Field, TagPill, EmptyState, ConfirmDialog } from '../components/ui'
 
 export default function StudyLog() {
-  const { data, upsert, showToast } = useData()
+  const { data, upsert, remove, canDelete, showToast } = useData()
   const logs = data.study_logs || []
   const stats = computeStats(data)
   const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   const [adding, setAdding] = useState(false)
+  const [confirm, setConfirm] = useState(null) // { id, name }
 
   const monthLogs = useMemo(
     () => logs.filter((l) => l.study_date?.startsWith(month)).sort((a, b) => (a.study_date < b.study_date ? 1 : -1)),
@@ -144,6 +145,7 @@ export default function StudyLog() {
                   <th className="py-2.5 pr-3 font-medium">主题</th>
                   <th className="py-2.5 pr-3 font-medium">时长</th>
                   <th className="py-2.5 font-medium">笔记</th>
+                  {canDelete && <th className="py-2.5 pl-3 font-medium text-right">操作</th>}
                 </tr>
               </thead>
               <tbody>
@@ -155,6 +157,11 @@ export default function StudyLog() {
                     <td className="py-3 pr-3"><TagPill>{l.topic || '通用'}</TagPill></td>
                     <td className="py-3 pr-3 text-ink-soft whitespace-nowrap">{l.duration_minutes ? l.duration_minutes + ' 分钟' : '—'}</td>
                     <td className="py-3 text-ink-soft truncate max-w-[220px]">{l.note || '—'}</td>
+                    {canDelete && (
+                      <td className="py-3 pl-3 text-right">
+                        <button onClick={() => setConfirm({ id: l.id, name: l.video_name })} className="p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="删除"><Trash2 size={15} /></button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -180,6 +187,15 @@ export default function StudyLog() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="删除学习记录"
+        message="删除后无法恢复，确定要删除这条学习记录吗？"
+        itemName={confirm?.name}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => { remove('study_logs', confirm.id); showToast('学习记录已删除。'); setConfirm(null) }}
+      />
     </div>
   )
 }

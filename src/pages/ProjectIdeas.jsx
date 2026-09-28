@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Pin, PinOff, Archive, ArchiveRestore, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Pin, PinOff, Archive, ArchiveRestore, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, EmptyState } from '../components/ui'
+import { Modal, Field, EmptyState, ConfirmDialog } from '../components/ui'
 
 const STATUS_STYLE = {
   '未开始': 'bg-gray-100 text-gray-500',
@@ -12,12 +12,13 @@ const STATUS_STYLE = {
 }
 
 export default function ProjectIdeas() {
-  const { data, upsert, showToast } = useData()
+  const { data, upsert, remove, canDelete, showToast } = useData()
   const nav = useNavigate()
   const [filter, setFilter] = useState('全部')
   const [showArchived, setShowArchived] = useState(false)
   const [adding, setAdding] = useState(false)
   const [menuId, setMenuId] = useState(null)
+  const [confirm, setConfirm] = useState(null) // { id, name }
 
   const all = data.project_ideas || []
   const list = all
@@ -93,6 +94,11 @@ export default function ProjectIdeas() {
                       <button onClick={() => { upsert('project_ideas', { ...p, archived: !p.archived }); setMenuId(null); showToast(p.archived ? '已恢复到活跃列表。' : '项目已归档。') }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 flex items-center gap-2 min-h-[44px]">
                         <Archive size={14} /> {p.archived ? '取消归档' : '归档'}
                       </button>
+                      {canDelete && (
+                        <button onClick={() => { setMenuId(null); setConfirm({ id: p.id, name: p.name }) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-danger/5 text-danger flex items-center gap-2 min-h-[44px]">
+                          <Trash2 size={14} /> 删除项目
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -112,6 +118,15 @@ export default function ProjectIdeas() {
           </form>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="删除项目灵感"
+        message="删除后无法恢复，项目下的步骤、参考资料等都会一并清除。确定要删除吗？"
+        itemName={confirm?.name}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => { remove('project_ideas', confirm.id); showToast('项目已删除。'); setConfirm(null) }}
+      />
     </div>
   )
 }

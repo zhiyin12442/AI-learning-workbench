@@ -1,17 +1,19 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { Plus, Pencil, ArrowLeft } from 'lucide-react'
+import { Plus, Pencil, ArrowLeft, Trash2 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Field, EmptyState, TagPill } from '../components/ui'
+import { Field, EmptyState, TagPill, ConfirmDialog } from '../components/ui'
 
 const MOODS = ['收获很大', '有触动', '一般', '待改进']
 const SOURCES = ['自己', '他人']
 
 export default function Reviews() {
-  const { data } = useData()
+  const { data, remove, canDelete, showToast } = useData()
   const list = [...(data.reviews || [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  const [confirm, setConfirm] = useState(null) // { id, title }
 
   return (
     <div>
@@ -30,22 +32,42 @@ export default function Reviews() {
       ) : (
         <div className="space-y-4">
           {list.map((r) => (
-            <Link key={r.id} to={`/reviews/${r.id}/edit`} className="card p-5 block hover:shadow-nav-active transition-shadow duration-200">
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <h3 className="font-semibold text-gray-900">{r.title}</h3>
-                <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
-                {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
-              </div>
-              <p className="text-sm text-ink-soft line-clamp-2">{r.body}</p>
-              <p className="text-xs text-ink-faint mt-2.5">
-                {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
-                {r.mood ? ' · ' + r.mood : ''}
-                {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
-              </p>
-            </Link>
+            <div key={r.id} className="card p-5 relative hover:shadow-nav-active transition-shadow duration-200">
+              <Link to={`/reviews/${r.id}/edit`} className="block pr-8">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <h3 className="font-semibold text-gray-900">{r.title}</h3>
+                  <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
+                  {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
+                </div>
+                <p className="text-sm text-ink-soft line-clamp-2">{r.body}</p>
+                <p className="text-xs text-ink-faint mt-2.5">
+                  {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
+                  {r.mood ? ' · ' + r.mood : ''}
+                  {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
+                </p>
+              </Link>
+              {canDelete && (
+                <button
+                  onClick={() => setConfirm({ id: r.id, title: r.title })}
+                  className="absolute top-4 right-4 p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="删除"
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title="删除复盘"
+        message="删除后无法恢复，确定要删除这条经验复盘吗？"
+        itemName={confirm?.title}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => { remove('reviews', confirm.id); showToast('复盘已删除。'); setConfirm(null) }}
+      />
     </div>
   )
 }
