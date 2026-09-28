@@ -3,10 +3,12 @@ import { FileText, CheckSquare, CheckCircle2, AlertCircle, CalendarDays } from '
 import { useData, computeStats } from '../lib/store'
 import { Header, GlobalSearch } from '../components/Header'
 import { StatCard, StatusText, PriorityPill, TagPill } from '../components/ui'
-import ProjectCard, { TasksGauge } from '../components/cards'
+import { TasksGauge } from '../components/cards'
+import FolderProjectCard from '../components/FolderProjectCard'
 import { ACTIVITIES } from '../lib/seed'
 
-const FOLDER_COLORS = ['lime', 'violet', 'sky']
+// 文件夹主题色（与 cards.jsx 的 HEX 一致，保持配色变量不改动）
+const FOLDER_HEX = ['#84CC16', '#A78BFA', '#38BDF8']
 
 export default function Dashboard() {
   const { data, upsert } = useData()
@@ -51,11 +53,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {projects.map((p, i) => (
               <Link key={p.id} to={`/projects/${p.id}`}>
-                <ProjectCard
-                  project={{ ...p, deadline: p.updated_at?.slice(0, 10) || '—' }}
+                <FolderProjectCard
+                  title={p.name}
+                  color={FOLDER_HEX[i % 3]}
+                  deadline={p.updated_at?.slice(0, 10) || '—'}
+                  tasksCount={(p.steps || []).length}
                   progress={progressOf(p)}
-                  tasks={(p.steps || []).length}
-                  color={FOLDER_COLORS[i % 3]}
                 />
               </Link>
             ))}
