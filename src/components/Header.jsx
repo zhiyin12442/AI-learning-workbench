@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, CornerDownLeft } from 'lucide-react'
 import { useData } from '../lib/store'
-import { AVATARS } from '../lib/seed'
 
 // 搜索范围定义：板块 → 字段
 const SOURCES = [
@@ -26,7 +25,7 @@ const searchAll = (data, q) => {
   return out.slice(0, 12)
 }
 
-export default function GlobalSearch({ autoFocusHint = true }) {
+export function GlobalSearch({ autoFocusHint = true }) {
   const { data } = useData()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -58,7 +57,7 @@ export default function GlobalSearch({ autoFocusHint = true }) {
 
   return (
     <div ref={boxRef} className="relative">
-      <div className="relative w-full md:w-[300px]">
+      <div className="relative w-full md:w-[320px]">
         <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           ref={inputRef}
@@ -71,8 +70,8 @@ export default function GlobalSearch({ autoFocusHint = true }) {
             else if (e.key === 'Enter' && results[idx]) go(results[idx])
             else if (e.key === 'Escape') setOpen(false)
           }}
-          placeholder="全局快速查找 (⌘K)..."
-          className="w-full rounded-full bg-white border border-gray-200 pl-10 pr-4 py-2 text-sm"
+          placeholder="快速查找"
+          className="w-full rounded-[16px] bg-white border border-gray-200 pl-10 pr-4 py-2 text-sm"
         />
       </div>
       {open && q.trim() && (
@@ -102,23 +101,12 @@ export default function GlobalSearch({ autoFocusHint = true }) {
   )
 }
 
-export function Header({ title, showSearch = true }) {
+export function Header({ title }) {
   return (
-    <header className="flex flex-col gap-4 mb-6">
+    <header className="mb-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-        <div className="flex items-center">
-          <div className="flex -space-x-2.5">
-            {AVATARS.slice(0, 4).map((a, i) => (
-              <img key={i} src={a} alt="member" className="w-8 h-8 rounded-full border-2 border-white object-cover" />
-            ))}
-          </div>
-          <button className="w-8 h-8 -ml-1 rounded-full border-2 border-white bg-white text-gray-500 shadow-card flex items-center justify-center text-lg leading-none hover:text-primary min-h-[44px] min-w-[44px] rounded-full">
-            +
-          </button>
-        </div>
       </div>
-      {showSearch && <GlobalSearch />}
     </header>
   )
 }

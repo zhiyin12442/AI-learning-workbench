@@ -1,77 +1,47 @@
-import { CalendarDays, ListTodo, Folder } from 'lucide-react'
-import { AVATARS } from '../lib/seed'
+import { CalendarDays, ListTodo } from 'lucide-react'
 
-const COLORS = {
-  lime: { icon: 'text-folder-lime', bar: 'bg-folder-lime' },
-  violet: { icon: 'text-folder-violet', bar: 'bg-folder-violet' },
-  sky: { icon: 'text-folder-sky', bar: 'bg-folder-sky' },
-}
+// 文件夹标签配色：黄绿 / 紫 / 天蓝（交付要求 二.1）
+const HEX = { lime: '#84CC16', violet: '#A78BFA', sky: '#38BDF8' }
 
 /**
- * 项目文件夹卡片 —— 逐像素对照截图：
- * - 左上角白色文件夹凸舌（72×20，上侧圆角 10px，下端伸入卡片背后被盖住）
- * - 凸舌内放彩色实心文件夹图标（lime / violet / sky）
- * - 卡片左上角为直角（与凸舌无缝衔接），其余三角 12px 圆角
- * - 标题下方一排重叠成员头像（白描边）
- * - 元信息单行：左边截止日（日历图标），右边任务数（清单图标）
- * - 底部进度条 + 右侧深色粗体数字
- * - 常驻静态右下方向阴影，无悬停变化
+ * 项目文件夹卡片（交付要求 二.1）：
+ * - 顶部彩色文件夹标签（圆角矩形小色块，模拟文件夹顶部）
+ * - 项目名称 → 元信息行（截止日期 + 任务数，带 📅 / 📋）
+ * - 进度条（h-1.5 bg-gray-100 rounded-full，填充色与文件夹标签同色）
+ * - 单人工作台，已移除参与人员头像
  */
 export default function ProjectCard({ project, progress, color = 'lime', tasks }) {
-  const c = COLORS[color] || COLORS.lime
+  const c = HEX[color] || HEX.lime
   return (
-    <div className="relative mt-3">
-      {/* 文件夹凸舌：白色，上侧圆角 10px，底边与卡片顶边无缝衔接 */}
-      <div className="absolute -top-5 left-0 h-5 w-[72px] rounded-t-[10px] bg-white z-0" />
-      <div className="card relative z-10 p-5 rounded-tl-none">
-        <Folder size={22} strokeWidth={0} fill="currentColor" className={c.icon + ' absolute -top-3 left-4 z-20'} />
-        <h3 className="text-[17px] font-semibold text-gray-900 leading-snug truncate">{project.name}</h3>
+    <div className="card p-5">
+      <div className="w-6 h-5 rounded-t-[4px] mb-3" style={{ background: c }} />
+      <h3 className="font-semibold text-[15px] text-gray-900 leading-snug truncate">{project.name}</h3>
 
-        {/* 成员头像行 */}
-        <div className="mt-3 flex -space-x-2">
-          {AVATARS.slice(0, 4).map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt=""
-              loading="lazy"
-              className="w-7 h-7 rounded-full object-cover ring-2 ring-white"
-            />
-          ))}
-        </div>
+      {/* 元信息单行：截止日 + 任务数 */}
+      <div className="mt-2.5 flex items-center justify-between text-xs text-ink-faint">
+        <span className="inline-flex items-center gap-1">
+          <CalendarDays size={13} className="shrink-0" /> 截止日期 {project.deadline}
+        </span>
+        <span className="inline-flex items-center gap-1 shrink-0">
+          <ListTodo size={13} /> {tasks} 个任务
+        </span>
+      </div>
 
-        {/* 元信息单行：截止日 + 任务数 */}
-        <div className="mt-3 flex items-center justify-between gap-2 text-xs text-ink-faint">
-          <span className="inline-flex items-center gap-1.5 min-w-0">
-            <CalendarDays size={13} className="shrink-0" />
-            <span className="truncate">Deadline: {project.deadline}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5 shrink-0">
-            <ListTodo size={13} />
-            <span>{tasks} tasks</span>
-          </span>
-        </div>
-
-        {/* 进度条 + 数字 */}
-        <div className="mt-3 flex items-center gap-3">
-          <div className="flex-1 h-[6px] bg-gray-100 rounded-full overflow-hidden">
-            <div className={'h-full rounded-full transition-all duration-500 ' + c.bar} style={{ width: progress + '%' }} />
-          </div>
-          <span className="text-[13px] font-bold text-gray-900 tabular-nums">{progress}</span>
-        </div>
+      {/* 进度条 + 填充色与标签一致 */}
+      <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: progress + '%', background: c }} />
       </div>
     </div>
   )
 }
 
-// 半圆环分段仪表盘 —— 对照截图：粗环、圆头端点、段间白色细缝
+// 半圆环分段仪表盘（交付要求 二.2）：灰色背景环 + 彩色分段弧 + 中心总任务数
 export function TasksGauge({ total = 27, segments }) {
-  // segments: [{label, pct, color}]，从左到右：sky, violet, yellow, lime
-  const R = 84
+  const R = 92
   const CX = 110
-  const CY = 116
-  const SW = 30
-  const GAP = 4 // 段间空隙（度）
+  const CY = 104
+  const SW = 16
+  const GAP = 3 // 段间空隙（度）
   const polar = (deg) => {
     const a = ((180 - deg) * Math.PI) / 180
     return [CX + R * Math.cos(a), CY - R * Math.sin(a)]
@@ -97,9 +67,11 @@ export function TasksGauge({ total = 27, segments }) {
     )
   })
   return (
-    <svg viewBox="0 0 220 126" className="w-full">
+    <svg viewBox="0 0 220 120" className="w-full">
+      {/* 灰色背景半圆环 */}
+      <path d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`} stroke="#F3F4F6" strokeWidth={SW} fill="none" />
       {arcs}
-      <text x={CX} y={CY - 32} textAnchor="middle" className="fill-gray-500" fontSize="13">Total task</text>
+      <text x={CX} y={CY - 32} textAnchor="middle" className="fill-gray-500" fontSize="13">总任务</text>
       <text x={CX} y={CY - 4} textAnchor="middle" className="fill-gray-900" fontSize="28" fontWeight="700">{total}</text>
     </svg>
   )

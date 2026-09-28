@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { FileText, CheckSquare, CheckCircle2, AlertCircle, CalendarDays } from 'lucide-react'
 import { useData, computeStats } from '../lib/store'
-import { Header } from '../components/Header'
+import { Header, GlobalSearch } from '../components/Header'
 import { StatCard, StatusText, PriorityPill, TagPill } from '../components/ui'
 import ProjectCard, { TasksGauge } from '../components/cards'
 import { ACTIVITIES } from '../lib/seed'
@@ -16,11 +16,12 @@ export default function Dashboard() {
   const stepsDone = (p) => (p.steps || []).filter((s) => s.done).length
   const progressOf = (p) => (p.steps?.length ? Math.round((stepsDone(p) / p.steps.length) * 100) : 0)
 
+  // 任务进度半环形：分段占比与配色（交付要求 二.2）
   const gaugeSegments = [
-    { label: 'Not started', pct: 20, color: '#38BDF8' },
-    { label: 'On progress', pct: 8, color: '#A78BFA' },
-    { label: 'On review', pct: 12, color: '#FACC15' },
-    { label: 'Completed', pct: 60, color: '#84CC16' },
+    { label: '未开始', pct: 20, color: '#60A5FA' },
+    { label: '进行中', pct: 8, color: '#A78BFA' },
+    { label: '审核中', pct: 12, color: '#FBBF24' },
+    { label: '已完成', pct: 60, color: '#34D399' },
   ]
 
   const recentLogs = [...(data.study_logs || [])]
@@ -29,7 +30,11 @@ export default function Dashboard() {
 
   return (
     <div>
-      <Header title="Dashboard" />
+      <Header title="总览" />
+      {/* 全局搜索框仅保留在总览页（交付要求 5） */}
+      <div className="mb-6">
+        <GlobalSearch />
+      </div>
 
       {/* 统计卡 */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
@@ -39,10 +44,10 @@ export default function Dashboard() {
         <StatCard label="逾期任务" value={1} icon={AlertCircle} delta="-2%" up={false} color="text-danger" />
       </div>
 
-      {/* 中部：项目概览 + Tasks progress */}
+      {/* 中部：项目概览 + 任务进度 */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 mb-6">
         <div>
-          <p className="text-base font-semibold text-gray-900 mb-4">Project overview</p>
+          <p className="text-base font-semibold text-gray-900 mb-4">项目概览</p>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {projects.map((p, i) => (
               <Link key={p.id} to={`/projects/${p.id}`}>
@@ -57,13 +62,13 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="card p-5 h-fit">
-          <p className="text-base font-semibold text-gray-900 mb-2">Tasks progress</p>
+          <p className="text-base font-semibold text-gray-900 mb-2">任务进度</p>
           <TasksGauge total={27} segments={gaugeSegments} />
           <ul className="mt-3 space-y-2.5">
             {gaugeSegments.map((s) => (
               <li key={s.label} className="flex items-center gap-2 text-[13px]">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: s.color }} />
-                <span className="font-medium" style={{ color: s.color }}>{s.label}</span>
+                <span className="w-2.5 h-2.5 rounded-[2px]" style={{ background: s.color }} />
+                <span className="font-medium text-gray-800">{s.label}</span>
                 <span className="ml-auto font-bold text-gray-900 tabular-nums">{s.pct}%</span>
               </li>
             ))}
@@ -74,17 +79,17 @@ export default function Dashboard() {
       {/* 底部：最近学习记录 + 最新动态 */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 pb-2">
         <div className="card p-5">
-          <p className="text-base font-semibold text-gray-900 mb-4">Tasks overview</p>
+          <p className="text-base font-semibold text-gray-900 mb-4">任务总览</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[620px]">
               <thead>
                 <tr className="text-left text-xs text-ink-soft bg-gray-50 rounded-[10px]">
                   <th className="py-2.5 pl-3 pr-2 font-medium rounded-l-[10px] w-10">#</th>
-                  <th className="py-2.5 pr-2 font-medium">Name</th>
-                  <th className="py-2.5 pr-2 font-medium">Date</th>
-                  <th className="py-2.5 pr-2 font-medium">Priority</th>
-                  <th className="py-2.5 pr-2 font-medium">Tags</th>
-                  <th className="py-2.5 pr-3 font-medium rounded-r-[10px]">Status</th>
+                  <th className="py-2.5 pr-2 font-medium">名称</th>
+                  <th className="py-2.5 pr-2 font-medium">日期</th>
+                  <th className="py-2.5 pr-2 font-medium">优先级</th>
+                  <th className="py-2.5 pr-2 font-medium">标签</th>
+                  <th className="py-2.5 pr-3 font-medium rounded-r-[10px]">状态</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +114,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card p-5 h-fit">
-          <p className="text-base font-semibold text-gray-900 mb-4">Latest Activity</p>
+          <p className="text-base font-semibold text-gray-900 mb-4">最新动态</p>
           <div className="relative">
             {ACTIVITIES.map((a, i) => (
               <div key={i} className="relative flex gap-3 pb-5 last:pb-0">

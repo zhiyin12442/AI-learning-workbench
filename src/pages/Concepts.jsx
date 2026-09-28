@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Link as LinkIcon, Search } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, Highlight, EmptyState, useHighlightTarget, ConfirmDialog } from '../components/ui'
+import { Modal, Field, Highlight, EmptyState, useHighlightTarget, ConfirmDialog, SwipeRow } from '../components/ui'
 
 const ACCENTS = ['#286ED3', '#4D3EB4', '#84CC16', '#F59E0B', '#EF4444', '#38BDF8']
 
@@ -130,52 +130,51 @@ export default function Concepts() {
             </div>
           ) : (
             <div className="space-y-5">
-              {visibleGroups.map(([g, items]) => (
-                <div key={g} className="card overflow-hidden">
-                  <div className="px-5 py-3.5 border-b border-line flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACCENTS[g.length % ACCENTS.length] }} />
-                    <p className="text-sm font-semibold text-gray-800">{g}</p>
-                    <span className="text-xs text-ink-faint">{items.filter(match).length} 条</span>
-                  </div>
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {items.filter(match).map((c) => {
+              {visibleGroups.map(([g, items]) => {
+                const list = items.filter(match)
+                return (
+                  <div key={g} className="card overflow-hidden">
+                    <div className="px-5 py-3.5 border-b border-line flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACCENTS[g.length % ACCENTS.length] }} />
+                      <p className="text-sm font-semibold text-gray-800">{g}</p>
+                      <span className="text-xs text-ink-faint">{list.length} 条</span>
+                    </div>
+                    <div>
+                      {list.map((c) => {
                         const open = expanded[c.id]
                         return (
-                          <tr key={c.id} id={'item-' + c.id} className={'border-b border-line last:border-0 transition-colors duration-500 ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
-                            <td className="py-3.5 pl-5 pr-2 font-medium text-gray-800 w-[220px] align-top">
-                              <Highlight text={c.name} kw={kw} />
-                            </td>
-                            <td className="py-3.5 pr-5 text-ink-soft align-top">
-                              <p className={open ? '' : 'line-clamp-1'}>
-                                <Highlight text={c.description || '（暂无释义）'} kw={kw} />
-                              </p>
-                              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                {(c.tags || []).map((t) => <Highlight key={t} text={'#' + t} kw={kw} />).map((el, i) => (
-                                  <span key={i} className="rounded-full px-2.5 py-0.5 text-xs bg-gray-100 text-ink-soft">{el}</span>
-                                ))}
-                                {c.description && c.description.length > 40 && (
-                                  <button onClick={() => setExpanded({ ...expanded, [c.id]: !open })} className="text-xs text-primary ml-1 min-h-[36px] px-2">
-                                    {open ? '收起' : '展开全文'}
-                                  </button>
-                                )}
+                          <SwipeRow
+                            key={c.id}
+                            onEdit={() => setEditing(c)}
+                            onDelete={canDelete ? () => setConfirm({ kind: 'concept', table: 'concepts', id: c.id, name: c.name }) : undefined}
+                            editLabel="编辑"
+                            deleteLabel="删除"
+                          >
+                            <div id={'item-' + c.id} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
+                              <div className="w-[200px] shrink-0 font-medium text-gray-800 truncate"><Highlight text={c.name} kw={kw} /></div>
+                              <div className="flex-1 min-w-0 text-ink-soft">
+                                <p className={open ? '' : 'line-clamp-1'}>
+                                  <Highlight text={c.description || '（暂无释义）'} kw={kw} />
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                  {(c.tags || []).map((t) => <Highlight key={t} text={'#' + t} kw={kw} />).map((el, i) => (
+                                    <span key={i} className="rounded-full px-2.5 py-0.5 text-xs bg-gray-100 text-ink-soft">{el}</span>
+                                  ))}
+                                  {c.description && c.description.length > 40 && (
+                                    <button onClick={() => setExpanded({ ...expanded, [c.id]: !open })} className="text-xs text-primary ml-1 min-h-[36px] px-2">
+                                      {open ? '收起' : '展开全文'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
-                            </td>
-                            <td className="py-3.5 pr-4 align-top">
-                              <div className="flex justify-end gap-1">
-                                <button onClick={() => setEditing(c)} className="p-2 text-ink-faint hover:text-primary min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="编辑"><Pencil size={15} /></button>
-                                {canDelete && (
-                                  <button onClick={() => setConfirm({ kind: 'concept', table: 'concepts', id: c.id, name: c.name })} className="p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="删除"><Trash2 size={15} /></button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
+                            </div>
+                          </SwipeRow>
                         )
                       })}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

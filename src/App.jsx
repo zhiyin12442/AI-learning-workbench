@@ -28,10 +28,10 @@ function Shell() {
           </div>
         )}
         <main className="flex-1 p-5 md:p-6 md:pl-8 md:pr-8 overflow-y-auto">
-          {/* 小屏顶部汉堡 */}
+          {/* 小屏（手机 <768px）顶部汉堡；iPad 及以上显示左侧固定侧边栏 */}
           <button
             onClick={() => setMobileNav(true)}
-            className="lg:hidden mb-4 bg-white shadow-card rounded-[10px] px-4 py-2.5 text-sm text-gray-600 min-h-[44px]"
+            className="md:hidden mb-4 bg-white shadow-card rounded-[10px] px-4 py-2.5 text-sm text-gray-600 min-h-[44px]"
           >☰ 菜单</button>
           <Routes>
             <Route path="/" element={<Dashboard />} />

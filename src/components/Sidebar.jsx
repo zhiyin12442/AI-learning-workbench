@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import {
   LayoutGrid, Bell, BookOpen, NotebookPen, FolderKanban, Lightbulb,
-  History, LifeBuoy, Settings, ArrowUpRight, Cloud, CloudOff, KeyRound, X,
+  History, ArrowUpRight, Cloud, CloudOff, KeyRound, X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { isSupabaseConfigured } from '../lib/supabase'
 
 const itemCls = ({ isActive }) =>
-  'flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm text-gray-600 hover:bg-white/50 transition-all duration-200 min-h-[44px]' +
+  'flex items-center gap-2 px-2 py-2 rounded-[10px] text-sm text-gray-600 hover:bg-white/50 transition-all duration-200 min-h-[44px] ' +
+  'lg:gap-3 lg:px-3 lg:py-2.5 ' +
   (isActive ? ' bg-white shadow-nav-active text-gray-900 font-semibold' : '')
 
 function SyncCard() {
@@ -135,7 +136,7 @@ function SyncCard() {
 
 export default function Sidebar({ mobile = false, onNavigate }) {
   return (
-    <aside className={(mobile ? 'w-full ' : 'w-[240px] hidden lg:flex ') + 'shrink-0 p-6 pr-4 flex-col overflow-y-auto'}>
+    <aside className={(mobile ? 'w-full ' : 'w-[240px] md:w-[190px] lg:w-[240px] hidden md:flex ') + 'shrink-0 p-4 lg:p-6 lg:pr-4 flex-col overflow-y-auto'}>
       <Link to="/" className="flex items-center gap-2.5 mb-8" onClick={onNavigate}>
         <span className="w-9 h-9 rounded-[10px] bg-accent flex items-center justify-center">
           <ArrowUpRight size={18} className="text-white" strokeWidth={2.5} />
@@ -143,17 +144,17 @@ export default function Sidebar({ mobile = false, onNavigate }) {
         <span className="text-xl font-bold tracking-tight text-gray-900">Nexdo</span>
       </Link>
 
-      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">Overview</p>
+      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">概览</p>
       <nav className="flex flex-col gap-1 mb-6">
         <NavLink to="/" end className={itemCls} onClick={onNavigate}>
-          <LayoutGrid size={17} /> Dashboard
+          <LayoutGrid size={17} /> 总览
         </NavLink>
       </nav>
 
-      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">Tools</p>
+      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">工具</p>
       <nav className="flex flex-col gap-1">
         <div className={itemCls({ isActive: false })}>
-          <Bell size={17} /> Notification
+          <Bell size={17} /> 通知
           <span className="ml-auto w-5 h-5 rounded-full bg-danger text-white text-[11px] flex items-center justify-center">5</span>
         </div>
         <NavLink to="/concepts" className={itemCls} onClick={onNavigate}><BookOpen size={17} /> 概念学习</NavLink>
@@ -164,12 +165,6 @@ export default function Sidebar({ mobile = false, onNavigate }) {
       </nav>
 
       <div className="mt-auto pt-8 flex flex-col gap-1">
-        <a className={itemCls({ isActive: false })} href="#" onClick={(e) => e.preventDefault()}>
-          <LifeBuoy size={17} /> Support
-        </a>
-        <a className={itemCls({ isActive: false })} href="#" onClick={(e) => e.preventDefault()}>
-          <Settings size={17} /> Setting
-        </a>
         <SyncCard />
       </div>
     </aside>
@@ -186,7 +181,7 @@ export function MobileTabBar() {
     { to: '/reviews', icon: History, label: '复盘' },
   ]
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-100 flex justify-around py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-gray-100 flex justify-around py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {tabs.map(({ to, icon: Icon, label }) => (
         <NavLink
           key={to} to={to} end={to === '/'}

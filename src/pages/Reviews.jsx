@@ -14,49 +14,68 @@ export default function Reviews() {
   const { data, remove, canDelete, showToast } = useData()
   const list = [...(data.reviews || [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
   const [confirm, setConfirm] = useState(null) // { id, title }
+  const [expandedId, setExpandedId] = useState(null) // 展开查看（交付要求 七.2）
 
   return (
     <div>
       <Header title="经验复盘" />
       <div className="flex justify-end mb-4">
-        <Link to="/reviews/new" className="btn-primary flex items-center gap-1.5 min-h-[44px]"><Plus size={16} /> 写复盘</Link>
+        <Link to="/reviews/new" className="btn-primary flex items-center gap-1.5 min-h-[44px] rounded-[10px]"><Plus size={16} /> 写复盘</Link>
       </div>
 
       {list.length === 0 ? (
         <div className="card">
           <EmptyState
             text="这里还是空的，点击右上角「写复盘」，把刚学到的经验沉淀下来。"
-            action={<Link to="/reviews/new" className="btn-primary min-h-[44px]">写第一篇复盘</Link>}
+            action={<Link to="/reviews/new" className="btn-primary min-h-[44px] rounded-[10px]">写第一篇复盘</Link>}
           />
         </div>
       ) : (
         <div className="space-y-4">
-          {list.map((r) => (
-            <div key={r.id} className="card p-5 relative hover:shadow-nav-active transition-shadow duration-200">
-              <Link to={`/reviews/${r.id}/edit`} className="block pr-8">
-                <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                  <h3 className="font-semibold text-gray-900">{r.title}</h3>
-                  <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
-                  {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
-                </div>
-                <p className="text-sm text-ink-soft line-clamp-2">{r.body}</p>
-                <p className="text-xs text-ink-faint mt-2.5">
-                  {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
-                  {r.mood ? ' · ' + r.mood : ''}
-                  {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
-                </p>
-              </Link>
-              {canDelete && (
+          {list.map((r) => {
+            const open = expandedId === r.id
+            return (
+              <div key={r.id} className="card p-5 relative">
+                {/* 点击卡片查看全文（不再直接进入编辑） */}
                 <button
-                  onClick={() => setConfirm({ id: r.id, title: r.title })}
-                  className="absolute top-4 right-4 p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center"
-                  aria-label="删除"
+                  type="button"
+                  onClick={() => setExpandedId(open ? null : r.id)}
+                  className="block w-full text-left pr-8"
                 >
-                  <Trash2 size={15} />
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <h3 className="font-semibold text-gray-900">{r.title}</h3>
+                    <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
+                    {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
+                  </div>
+                  <p className={'text-sm text-ink-soft ' + (open ? 'whitespace-pre-wrap' : 'line-clamp-2')}>{r.body}</p>
+                  <p className="text-xs text-ink-faint mt-2.5">
+                    {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
+                    {r.mood ? ' · ' + r.mood : ''}
+                    {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
+                  </p>
                 </button>
-              )}
-            </div>
-          ))}
+
+                {/* 底部编辑按钮（交付要求 七.2） */}
+                <div className="mt-3 flex items-center gap-2">
+                  <Link
+                    to={`/reviews/${r.id}/edit`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-line px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 min-h-[40px]"
+                  >编辑</Link>
+                </div>
+
+                {canDelete && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirm({ id: r.id, title: r.title }) }}
+                    className="absolute top-4 right-4 p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    aria-label="删除"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

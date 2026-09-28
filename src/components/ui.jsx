@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Pencil, Trash2 } from 'lucide-react'
 
-export function Modal({ title, onClose, children, wide = false }) {
+export function Modal({ title, onClose, children, wide = false, maxW }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -10,7 +10,7 @@ export function Modal({ title, onClose, children, wide = false }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onMouseDown={onClose}>
       <div
-        className={'card w-full shadow-modal ' + (wide ? 'max-w-2xl' : 'max-w-lg') + ' p-6 max-h-[85vh] overflow-y-auto'}
+        className={'card w-full shadow-card ' + (maxW || (wide ? 'max-w-2xl' : 'max-w-lg')) + ' p-6 max-h-[85vh] overflow-y-auto'}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -61,10 +61,11 @@ export function PriorityPill({ level }) {
     'Medium': 'bg-warning/10 text-warning',
     'Low': 'bg-gray-100 text-gray-500',
   }
+  const label = { 'High': '高', 'Medium': '中', 'Low': '低' }[level] || level
   return (
     <span className={'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ' + (map[level] || map['Low'])}>
       <span className={'w-1 h-1 rounded-full ' + (level === 'High' ? 'bg-danger' : level === 'Medium' ? 'bg-warning' : 'bg-gray-400')} />
-      {level}
+      {label}
     </span>
   )
 }
@@ -181,6 +182,102 @@ export function ConfirmDialog({ open, title = '确认删除', message, itemName,
             {confirmText}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 滑动操作行（交付要求 7）：从最右侧向左滑动呼出操作按钮。
+ * - 露出两个图标按钮：编辑（铅笔，主色 #286ED3）+ 删除（垃圾桶，危险色 #EF4444）
+ * - 按钮 32×32、圆角 8px、白色图标
+ * - 动画 200ms，transform: translateX 实现；松手后保持在打开状态，点击其他区域自动收回
+ * - 项目灵感板块传 disableEdit 仅显示删除图标
+ */
+export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', deleteLabel = '删除', disableEdit = false }) {
+  const hasEdit = !disableEdit && typeof onEdit === 'function'
+  const hasDelete = typeof onDelete === 'function'
+  const count = (hasEdit ? 1 : 0) + (hasDelete ? 1 : 0)
+  const REVEAL_W = count * 32 + (count - 1) * 8 + 12 // 按钮 32 + 间隙 8 + 右内边距 12
+  const [open, setOpen] = useState(false)
+  const [dragX, setDragX] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const startX = useRef(0)
+  const moved = useRef(false)
+  const suppress = useRef(false)
+  const rootRef = useRef(null)
+
+  // 点击空白处自动收起
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => { if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('touchstart', onDoc)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('touchstart', onDoc)
+    }
+  }, [open])
+
+  const onDown = (e) => {
+    setDragging(true)
+    moved.current = false
+    startX.current = e.clientX
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
+  }
+  const onMove = (e) => {
+    if (!dragging) return
+    const dx = e.clientX - startX.current
+    if (Math.abs(dx) > 6) moved.current = true
+    let x = open ? dx - REVEAL_W : Math.min(0, dx)
+    x = Math.max(-REVEAL_W, Math.min(0, x))
+    setDragX(x)
+  }
+  const onUp = () => {
+    if (!dragging) return
+    setDragging(false)
+    const x = dragX
+    if (x < -REVEAL_W / 2) { setOpen(true); setDragX(-REVEAL_W) }
+    else { setOpen(false); setDragX(0) }
+    if (moved.current) { suppress.current = true; setTimeout(() => { suppress.current = false }, 0) }
+  }
+  // 抑制拖动后的误点击（避免滑动后触发行内链接/导航）
+  const onClickCapture = (e) => { if (suppress.current) { e.preventDefault(); e.stopPropagation() } }
+
+  const translate = open ? -REVEAL_W : dragX
+
+  return (
+    <div ref={rootRef} className="relative">
+      {count > 0 && (
+        <div className="absolute right-0 inset-y-0 z-0 flex items-center pr-3 gap-2">
+          {hasEdit && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onEdit() }}
+              aria-label={editLabel}
+              className="w-8 h-8 rounded-[8px] bg-primary text-white flex items-center justify-center active:scale-95 shrink-0"
+            ><Pencil size={16} /></button>
+          )}
+          {hasDelete && (
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onDelete() }}
+              aria-label={deleteLabel}
+              className="w-8 h-8 rounded-[8px] bg-danger text-white flex items-center justify-center active:scale-95 shrink-0"
+            ><Trash2 size={16} /></button>
+          )}
+        </div>
+      )}
+      <div
+        className={'relative z-10 bg-white ' + (dragging ? '' : 'transition-transform duration-200 ease-out')}
+        style={{ transform: `translateX(${translate}px)`, touchAction: 'pan-y' }}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
+        onClickCapture={onClickCapture}
+      >
+        {children}
       </div>
     </div>
   )
