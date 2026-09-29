@@ -43,17 +43,15 @@ function useContainerWidth() {
   return { ref, width: w }
 }
 
-function FolderCard({ project, color, cardW }) {
+function FolderCard({ project, color, cardW, onClick }) {
   const steps = project.steps || []
   const tasks = steps.length
   const progress = tasks ? Math.round((steps.filter((s) => s.done).length / tasks) * 100) : 0
   const date = project.deadline || (project.updated_at ? project.updated_at.slice(0, 10) : '')
-  return (
-    <Link
-      to={`/projects/${project.id}`}
-      className="flex w-full flex-col bg-white p-4 pt-3.5"
-      style={{ height: CARD_H, clipPath: folderClipPath(cardW) }}
-    >
+  const style = { height: CARD_H, clipPath: folderClipPath(cardW) }
+  const cls = 'flex w-full flex-col bg-white p-4 pt-3.5'
+  const inner = (
+    <>
       {/* 1. 顶部文件夹图标（扁平实心，本卡专属色） */}
       <Folder className="h-[18px] w-[22px]" style={{ color }} fill={color} strokeWidth={1.5} />
 
@@ -81,26 +79,35 @@ function FolderCard({ project, color, cardW }) {
         </div>
         <span className="text-[15px] font-semibold text-gray-900">{progress}</span>
       </div>
+    </>
+  )
+  // 传入 onClick 时用 button（如项目灵感页：点击弹详情卡片）；否则保持 Link 跳详情页（总览）
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={cls + ' text-left'} style={style}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <Link to={`/projects/${project.id}`} className={cls} style={style}>
+      {inner}
     </Link>
   )
 }
 
-export default function ProjectOverviewCards({ projects = [] }) {
+/**
+ * 可复用的文件夹卡片网格（总览与「项目灵感」页共用，保证卡片样式统一）。
+ * - onItemClick：可选。提供时点击卡片回调（如弹详情卡片），否则卡片为 Link 跳详情页。
+ * - renderOverlay(p, i)：可选。渲染卡片上的覆盖层（如状态胶囊菜单、置顶角标）。
+ * - getItemStyle(p, i)：可选。为某张卡的外层追加样式（如打开菜单时提升 zIndex）。
+ */
+export function FolderCardGrid({ projects = [], onItemClick, renderOverlay, getItemStyle }) {
   const { ref, width } = useContainerWidth()
-
-  // 列数：响应容器宽度（每行最多 3），超出自动换行由 grid 完成
   const gridCols = width === 0 ? 3 : width < 480 ? 1 : width < 780 ? 2 : 3
   const gap = 16
   const cardW = width > 0 ? Math.floor((width - gap * (gridCols - 1)) / gridCols) : 300
-
-  if (!projects.length) {
-    return (
-      <div ref={ref} className="card flex h-32 items-center justify-center text-sm text-ink-soft">
-        暂无项目，去「项目灵感」新增一个吧
-      </div>
-    )
-  }
-
+  if (!projects.length) return null
   return (
     <div
       ref={ref}
@@ -108,10 +115,31 @@ export default function ProjectOverviewCards({ projects = [] }) {
       style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
     >
       {projects.map((p, i) => (
-        <div key={p.id} className="w-full" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))' }}>
-          <FolderCard project={p} color={PALETTE[i % PALETTE.length]} cardW={cardW} />
+        <div
+          key={p.id}
+          className="relative w-full"
+          style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))', ...(getItemStyle ? getItemStyle(p, i) : null) }}
+        >
+          <FolderCard
+            project={p}
+            color={PALETTE[i % PALETTE.length]}
+            cardW={cardW}
+            onClick={onItemClick ? () => onItemClick(p) : undefined}
+          />
+          {renderOverlay && renderOverlay(p, i)}
         </div>
       ))}
     </div>
   )
+}
+
+export default function ProjectOverviewCards({ projects = [] }) {
+  if (!projects.length) {
+    return (
+      <div className="card flex h-32 items-center justify-center text-sm text-ink-soft">
+        暂无项目，去「项目灵感」新增一个吧
+      </div>
+    )
+  }
+  return <FolderCardGrid projects={projects} />
 }

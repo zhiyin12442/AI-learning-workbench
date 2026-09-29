@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
-import { Plus, Pin, PinOff, Archive, ArchiveRestore, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Pin, PinOff, Archive, ArchiveRestore, ChevronDown } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, EmptyState, ConfirmDialog, SwipeRow, RecordDetailModal } from '../components/ui'
+import { Modal, Field, EmptyState, ConfirmDialog, RecordDetailModal } from '../components/ui'
+import { FolderCardGrid } from '../components/ProjectOverviewCards'
 
 const STATUS_STYLE = {
   '未开始': 'bg-gray-100 text-gray-500',
@@ -32,6 +33,21 @@ export default function ProjectIdeas() {
     upsert('project_ideas', { ...p, status })
     if (status === '已完成') showToast(`🎉 项目「${p.name}」已完成，要不要写一条复盘沉淀经验？`, 4200)
   }
+
+  // 状态菜单打开时，点击菜单以外区域自动收起（菜单内部点击不收起，保证胶囊按钮可再次点击关闭）
+  useEffect(() => {
+    if (!menuId) return
+    const close = (e) => {
+      if (e.target.closest && e.target.closest('[data-status-menu]')) return
+      setMenuId(null)
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('touchstart', close)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('touchstart', close)
+    }
+  }, [menuId])
 
   const save = (e) => {
     e.preventDefault()
@@ -65,52 +81,49 @@ export default function ProjectIdeas() {
           <EmptyState text={showArchived ? '归档箱是空的，先专注活跃的项目吧。' : '这里还是空的，记录下一个让你心动的项目想法。'} action={!showArchived && <button onClick={() => setAdding(true)} className="btn-primary min-h-[44px]">+ 新建项目</button>} />
         </div>
       ) : (
-        <div className="card">
-          {list.map((p) => {
-            const done = (p.steps || []).filter((s) => s.done).length
-            return (
-              <SwipeRow
-                key={p.id}
-                disableEdit
-                onDelete={canDelete ? () => setConfirm({ id: p.id, name: p.name }) : undefined}
-                onTap={() => setDetail(p)}
-                deleteLabel="删除"
+        /* 与总览「项目灵感」板块统一的文件夹卡片网格 */
+        <FolderCardGrid
+          projects={list}
+          onItemClick={(p) => setDetail(p)}
+          getItemStyle={(p) => (menuId === p.id ? { zIndex: 30 } : null)}
+          renderOverlay={(p) => (
+            <div
+              data-status-menu
+              className="absolute right-3 top-[15px] z-10 flex items-center gap-1.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {p.pinned && <Pin size={13} className="text-warning shrink-0" fill="currentColor" />}
+              <button
+                onClick={() => setMenuId(menuId === p.id ? null : p.id)}
+                className={'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium shadow-card-shadow ' + (STATUS_STYLE[p.status] || STATUS_STYLE['未开始'])}
               >
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-line last:border-0 hover:bg-gray-50/60 cursor-pointer min-h-[64px]">
-                  {p.pinned && <Pin size={14} className="text-warning shrink-0" />}
-                  <ChevronRight size={15} className="text-ink-faint shrink-0 hidden md:block" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-800 truncate hover:text-primary">{p.name}</p>
-                    <p className="text-xs text-ink-faint truncate mt-0.5">{p.goal || '还没有写一句话目标'}</p>
-                  </div>
-                  <span className="text-xs text-ink-faint hidden md:block whitespace-nowrap">{done}/{(p.steps || []).length} 步</span>
-                  <div className="relative" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => setMenuId(menuId === p.id ? null : p.id)}
-                      className={'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium min-h-[44px] ' + (STATUS_STYLE[p.status] || STATUS_STYLE['未开始'])}
-                    >
-                      {p.status || '未开始'} <ChevronDown size={13} />
-                    </button>
-                    {menuId === p.id && (
-                      <div className="absolute right-0 top-full mt-4 z-50 w-full card p-1 shadow-card-shadow">
-                        {Object.keys(STATUS_STYLE).map((s) => (
-                          <button key={s} onClick={() => { setStatus(p, s); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 min-h-[44px]">{s}</button>
-                        ))}
-                        <div className="border-t border-line my-1" />
-                        <button onClick={() => { upsert('project_ideas', { ...p, pinned: !p.pinned }); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 flex items-center gap-2 min-h-[44px]">
-                          {p.pinned ? <PinOff size={14} /> : <Pin size={14} />} {p.pinned ? '取消置顶' : '置顶'}
-                        </button>
-                        <button onClick={() => { upsert('project_ideas', { ...p, archived: !p.archived }); setMenuId(null); showToast(p.archived ? '已恢复到活跃列表。' : '项目已归档。') }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 flex items-center gap-2 min-h-[44px]">
-                          <Archive size={14} /> {p.archived ? '取消归档' : '归档'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                {p.status || '未开始'} <ChevronDown size={12} />
+              </button>
+              {menuId === p.id && (
+                <div className="absolute right-0 top-full mt-1.5 z-50 w-36 card p-1 shadow-card-shadow">
+                  {Object.keys(STATUS_STYLE).map((s) => (
+                    <button key={s} onClick={() => { setStatus(p, s); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 min-h-[40px]">{s}</button>
+                  ))}
+                  <div className="border-t border-line my-1" />
+                  <button onClick={() => { upsert('project_ideas', { ...p, pinned: !p.pinned }); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 flex items-center gap-2 min-h-[40px]">
+                    {p.pinned ? <PinOff size={14} /> : <Pin size={14} />} {p.pinned ? '取消置顶' : '置顶'}
+                  </button>
+                  <button onClick={() => { upsert('project_ideas', { ...p, archived: !p.archived }); setMenuId(null); showToast(p.archived ? '已恢复到活跃列表。' : '项目已归档。') }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 flex items-center gap-2 min-h-[40px]">
+                    <Archive size={14} /> {p.archived ? '取消归档' : '归档'}
+                  </button>
+                  {canDelete && (
+                    <>
+                      <div className="border-t border-line my-1" />
+                      <button onClick={() => { setConfirm({ id: p.id, name: p.name }); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-red-50 flex items-center gap-2 text-danger min-h-[40px]">
+                        删除
+                      </button>
+                    </>
+                  )}
                 </div>
-              </SwipeRow>
-            )
-          })}
-        </div>
+              )}
+            </div>
+          )}
+        />
       )}
 
       {adding && (
