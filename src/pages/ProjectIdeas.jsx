@@ -73,9 +73,10 @@ export default function ProjectIdeas() {
                 key={p.id}
                 disableEdit
                 onDelete={canDelete ? () => setConfirm({ id: p.id, name: p.name }) : undefined}
+                onTap={() => setDetail(p)}
                 deleteLabel="删除"
               >
-                <div onClick={() => setDetail(p)} className="flex items-center gap-3 px-5 py-4 border-b border-line last:border-0 hover:bg-gray-50/60 cursor-pointer min-h-[64px]">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-line last:border-0 hover:bg-gray-50/60 cursor-pointer min-h-[64px]">
                   {p.pinned && <Pin size={14} className="text-warning shrink-0" />}
                   <ChevronRight size={15} className="text-ink-faint shrink-0 hidden md:block" />
                   <div className="flex-1 min-w-0">

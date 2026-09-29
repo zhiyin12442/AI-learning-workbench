@@ -171,10 +171,11 @@ export default function StudyLog() {
                 key={l.id}
                 onEdit={() => setEditing(l)}
                 onDelete={canDelete ? () => setConfirm({ id: l.id, name: l.video_name }) : undefined}
+                onTap={() => setDetail(l)}
                 editLabel="编辑"
                 deleteLabel="删除"
               >
-                <div onClick={() => setDetail(l)} className="grid grid-cols-[100px_1fr_90px_1fr] gap-3 items-center py-3 px-3 border-b border-line last:border-0 cursor-pointer min-w-[560px]">
+                <div className="grid grid-cols-[100px_1fr_90px_1fr] gap-3 items-center py-3 px-3 border-b border-line last:border-0 cursor-pointer min-w-[560px]">
                   <span className="text-ink-soft whitespace-nowrap text-sm">{l.study_date}</span>
                   <span className="font-medium text-gray-800 truncate">{l.video_name}</span>
                   <span className="text-ink-soft whitespace-nowrap text-sm">{l.duration_minutes ? l.duration_minutes + ' 分钟' : '—'}</span>

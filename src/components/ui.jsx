@@ -241,7 +241,7 @@ export function ConfirmDialog({ open, title = '确认删除', message, itemName,
  * - 动画 200ms，transform: translateX 实现；松手后保持在打开状态，点击其他区域自动收回
  * - 项目灵感板块传 disableEdit 仅显示删除图标
  */
-export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', deleteLabel = '删除', disableEdit = false }) {
+export function SwipeRow({ children, onEdit, onDelete, onTap, editLabel = '编辑', deleteLabel = '删除', disableEdit = false }) {
   const hasEdit = !disableEdit && typeof onEdit === 'function'
   const hasDelete = typeof onDelete === 'function'
   const count = (hasEdit ? 1 : 0) + (hasDelete ? 1 : 0)
@@ -250,8 +250,13 @@ export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', del
   const [dragX, setDragX] = useState(0)
   const [dragging, setDragging] = useState(false)
   const startX = useRef(0)
+  const startY = useRef(0)
+  const startT = useRef(0)
+  const endX = useRef(0)
+  const endY = useRef(0)
   const moved = useRef(false)
   const suppress = useRef(false)
+  const stopTap = useRef(false)
   const rootRef = useRef(null)
 
   // 点击空白处自动收起
@@ -269,13 +274,27 @@ export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', del
   const onDown = (e) => {
     setDragging(true)
     moved.current = false
+    suppress.current = false
+    // 若按下起点落在交互控件（按钮/链接/输入等）内，则该手势不视为「轻点打开详情」
+    const tgt = e.target
+    stopTap.current = !!(tgt && tgt.closest && tgt.closest('button, a, input, select, textarea, [data-stop-tap]'))
     startX.current = e.clientX
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
+    startY.current = e.clientY
+    startT.current = Date.now()
+    endX.current = e.clientX
+    endY.current = e.clientY
+    // 仅当按下起点在行本体（非交互控件）时才捕获指针，确保子按钮的原生 click 能正常派发（如状态菜单、展开按钮）
+    if (!stopTap.current) {
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch (_) {}
+    }
   }
   const onMove = (e) => {
     if (!dragging) return
     const dx = e.clientX - startX.current
-    if (Math.abs(dx) > 6) moved.current = true
+    const dy = e.clientY - startY.current
+    endX.current = e.clientX
+    endY.current = e.clientY
+    if (Math.hypot(dx, dy) > 6) moved.current = true
     let x = open ? dx - REVEAL_W : Math.min(0, dx)
     x = Math.max(-REVEAL_W, Math.min(0, x))
     setDragX(x)
@@ -289,6 +308,15 @@ export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', del
     if (willOpen) { setOpen(true); setDragX(-REVEAL_W) }
     else { setOpen(false); setDragX(0) }
     if (moved.current && willOpen) { suppress.current = true; setTimeout(() => { suppress.current = false }, 0) }
+    // 轻点判定（鼠标/触屏都可靠）：
+    // 1) 没有真正滑开操作区（willOpen=false）；2) 整体位移很小（<12px，区别于竖向滚动）；
+    // 3) 当前未处于「已滑开」状态。命中即触发 onTap（如打开详情）。
+    // 关键：SwipeRow 调用 setPointerCapture 会让子元素的原生 click 事件经常不被派发，
+    // 因此这里直接判轻点并回调，确保「点击行」可靠生效，不受触屏抖动影响。
+    const movedDist = Math.hypot(endX.current - startX.current, endY.current - startY.current)
+    if (!willOpen && open === false && !stopTap.current && movedDist < 12 && typeof onTap === 'function') {
+      onTap()
+    }
   }
   // 抑制拖动后的误点击（避免滑动后触发行内链接/导航）
   const onClickCapture = (e) => { if (suppress.current) { e.preventDefault(); e.stopPropagation() } }

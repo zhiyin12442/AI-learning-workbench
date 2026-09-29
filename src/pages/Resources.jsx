@@ -124,10 +124,10 @@ export default function Resources() {
               key={r.id}
               disableEdit
               onDelete={canDelete ? () => setConfirm({ id: r.id, name: r.name || r.url }) : undefined}
+              onTap={() => setDetail(r)}
               deleteLabel="删除"
             >
               <div
-                onClick={() => setDetail(r)}
                 className={'grid ' + gridCols + ' items-center border-b border-line last:border-0 hover:bg-gray-50/60 cursor-pointer min-w-[560px]'}
               >
                 {isWeb ? (

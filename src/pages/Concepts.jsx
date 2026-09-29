@@ -148,10 +148,11 @@ export default function Concepts() {
                             key={c.id}
                             onEdit={() => setEditing(c)}
                             onDelete={canDelete ? () => setConfirm({ kind: 'concept', table: 'concepts', id: c.id, name: c.name }) : undefined}
+                            onTap={() => setDetail(c)}
                             editLabel="编辑"
                             deleteLabel="删除"
                           >
-                            <div id={'item-' + c.id} onClick={() => setDetail(c)} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 cursor-pointer ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
+                            <div id={'item-' + c.id} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 cursor-pointer ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
                               <div className="w-[200px] shrink-0 font-medium text-gray-800 truncate"><Highlight text={c.name} kw={kw} /></div>
                               <div className="flex-1 min-w-0 text-ink-soft">
                                 <p className={open ? '' : 'line-clamp-1'}>
