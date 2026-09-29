@@ -1,22 +1,14 @@
-import { Link } from 'react-router-dom'
 import { FileText, CheckSquare, CheckCircle2, AlertCircle, CalendarDays } from 'lucide-react'
 import { useData, computeStats } from '../lib/store'
 import { Header, GlobalSearch } from '../components/Header'
 import { StatCard, StatusText, PriorityPill, TagPill } from '../components/ui'
 import { TasksGauge } from '../components/cards'
-import FolderProjectCard from '../components/FolderProjectCard'
+import ProjectOverviewCards from '../components/ProjectOverviewCards'
 import { ACTIVITIES } from '../lib/seed'
-
-// 文件夹主题色（与 cards.jsx 的 HEX 一致，保持配色变量不改动）
-const FOLDER_HEX = ['#84CC16', '#A78BFA', '#38BDF8']
 
 export default function Dashboard() {
   const { data, upsert } = useData()
   const stats = computeStats(data)
-
-  const projects = (data.project_ideas || []).filter((p) => !p.archived).slice(0, 3)
-  const stepsDone = (p) => (p.steps || []).filter((s) => s.done).length
-  const progressOf = (p) => (p.steps?.length ? Math.round((stepsDone(p) / p.steps.length) * 100) : 0)
 
   // 任务进度半环形：分段占比与配色（交付要求 二.2）
   const gaugeSegments = [
@@ -50,18 +42,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 mb-6">
         <div>
           <p className="text-base font-semibold text-gray-900 mb-4">项目概览</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {projects.map((p, i) => (
-              <Link key={p.id} to={`/projects/${p.id}`}>
-                <FolderProjectCard
-                  title={p.name}
-                  color={FOLDER_HEX[i % 3]}
-                  deadline={p.updated_at?.slice(0, 10) || '—'}
-                  tasksCount={(p.steps || []).length}
-                  progress={progressOf(p)}
-                />
-              </Link>
-            ))}
+          <div className="overflow-x-auto">
+            <ProjectOverviewCards />
           </div>
         </div>
         <div className="card p-5 h-fit">
