@@ -47,7 +47,7 @@ export default function StudyLog() {
   }
 
   const exportCSV = () => {
-    const header = '日期,视频名称,时长(分钟),笔记'
+    const header = '日期,今日操作,时长(分钟),笔记'
     const rows = monthLogs.map((l) =>
       [l.study_date, l.video_name, l.duration_minutes, (l.note || '').replace(/[\n,]/g, ' ')].join(',')
     )
@@ -78,7 +78,7 @@ export default function StudyLog() {
     setAdding(false)
     showToast(
       hadYesterday || isToday
-        ? `已记录《${name}》，这是你连续学习的第 ${newStreak} 天 🔥`
+        ? `已记录「${name}」，这是你连续学习的第 ${newStreak} 天 🔥`
         : '第一条已记下，坚持就是最好的开始。'
     )
   }
@@ -131,7 +131,7 @@ export default function StudyLog() {
         {/* 点击某天查看当日视频（交付要求 四.1.4） */}
         {selDay && (
           <div className="mt-4 border-t border-line pt-4">
-            <p className="text-xs text-ink-faint mb-2">{selDay} 的学习视频</p>
+            <p className="text-xs text-ink-faint mb-2">{selDay} 的学习记录</p>
             {dayLogs.length === 0 ? (
               <p className="text-sm text-ink-soft">这一天还没有学习记录。</p>
             ) : (
@@ -164,7 +164,7 @@ export default function StudyLog() {
           <div className="overflow-x-auto">
             {/* 表头 */}
             <div className="grid grid-cols-[100px_1fr_90px_1fr] gap-3 px-3 py-2.5 text-xs text-ink-faint border-b border-line min-w-[560px]">
-              <span>日期</span><span>视频名称</span><span>时长</span><span>笔记</span>
+              <span>日期</span><span>今日操作</span><span>时长</span><span>笔记</span>
             </div>
             {monthLogs.map((l) => (
               <SwipeRow
@@ -189,7 +189,12 @@ export default function StudyLog() {
       {adding && (
         <Modal title="新增学习记录" onClose={() => setAdding(false)}>
           <form onSubmit={save}>
-            <Field label="视频名称"><input name="video_name" required className="w-full" autoFocus /></Field>
+            <Field label="今日操作">
+              <select name="video_name" required defaultValue="视频学习" className="w-full">
+                <option value="视频学习">视频学习</option>
+                <option value="实操学习">实操学习</option>
+              </select>
+            </Field>
             <Field label="学习日期"><input name="study_date" type="date" required defaultValue={format(new Date(), 'yyyy-MM-dd')} className="w-full" /></Field>
             <Field label="学习时长（分钟，可选）"><input name="duration_minutes" type="number" min="0" className="w-full" /></Field>
             <Field label="一句话笔记"><textarea name="note" rows={3} className="w-full" /></Field>
@@ -222,7 +227,12 @@ export default function StudyLog() {
             setEditing(null)
             showToast('学习记录已更新。')
           }}>
-            <Field label="视频名称"><input name="video_name" required defaultValue={editing.video_name} className="w-full" /></Field>
+            <Field label="今日操作">
+              <select name="video_name" required defaultValue={editing.video_name} className="w-full">
+                <option value="视频学习">视频学习</option>
+                <option value="实操学习">实操学习</option>
+              </select>
+            </Field>
             <Field label="学习日期"><input name="study_date" type="date" required defaultValue={editing.study_date} className="w-full" /></Field>
             <Field label="学习时长（分钟，可选）"><input name="duration_minutes" type="number" min="0" defaultValue={editing.duration_minutes || ''} className="w-full" /></Field>
             <Field label="一句话笔记"><textarea name="note" rows={3} defaultValue={editing.note || ''} className="w-full" /></Field>
@@ -237,7 +247,7 @@ export default function StudyLog() {
         title={detail?.video_name || '学习记录详情'}
         onClose={() => setDetail(null)}
         fields={detail ? [
-          { label: '视频名称', value: detail.video_name },
+          { label: '今日操作', value: detail.video_name },
           { label: '学习日期', value: detail.study_date },
           { label: '学习时长', value: detail.duration_minutes ? detail.duration_minutes + ' 分钟' : '—' },
           { label: '一句话笔记', value: detail.note },
