@@ -4,7 +4,7 @@ import { zhCN } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, Plus, Download, Flame } from 'lucide-react'
 import { useData, computeStats } from '../lib/store'
 import { Header } from '../components/Header'
-import { StatCard, Modal, Field, TagPill, EmptyState, ConfirmDialog, SwipeRow } from '../components/ui'
+import { StatCard, Modal, Field, TagPill, EmptyState, ConfirmDialog, SwipeRow, RecordDetailModal } from '../components/ui'
 
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
@@ -16,6 +16,7 @@ export default function StudyLog() {
   const [selDay, setSelDay] = useState(null)
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState(null) // 编辑中的记录
+  const [detail, setDetail] = useState(null) // 点击某条记录弹出的详情卡片
   const [confirm, setConfirm] = useState(null) // { id, name }
 
   const monthDate = new Date(month + '-01')
@@ -173,7 +174,7 @@ export default function StudyLog() {
                 editLabel="编辑"
                 deleteLabel="删除"
               >
-                <div className="grid grid-cols-[100px_1fr_90px_1fr] gap-3 items-center py-3 px-3 border-b border-line last:border-0 min-w-[560px]">
+                <div onClick={() => setDetail(l)} className="grid grid-cols-[100px_1fr_90px_1fr] gap-3 items-center py-3 px-3 border-b border-line last:border-0 cursor-pointer min-w-[560px]">
                   <span className="text-ink-soft whitespace-nowrap text-sm">{l.study_date}</span>
                   <span className="font-medium text-gray-800 truncate">{l.video_name}</span>
                   <span className="text-ink-soft whitespace-nowrap text-sm">{l.duration_minutes ? l.duration_minutes + ' 分钟' : '—'}</span>
@@ -229,6 +230,19 @@ export default function StudyLog() {
           </form>
         </Modal>
       )}
+
+      {/* 点击学习记录条目弹出的完整详情卡片 */}
+      <RecordDetailModal
+        open={!!detail}
+        title={detail?.video_name || '学习记录详情'}
+        onClose={() => setDetail(null)}
+        fields={detail ? [
+          { label: '视频名称', value: detail.video_name },
+          { label: '学习日期', value: detail.study_date },
+          { label: '学习时长', value: detail.duration_minutes ? detail.duration_minutes + ' 分钟' : '—' },
+          { label: '一句话笔记', value: detail.note },
+        ] : []}
+      />
     </div>
   )
 }

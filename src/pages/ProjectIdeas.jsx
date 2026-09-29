@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
 import { Plus, Pin, PinOff, Archive, ArchiveRestore, ChevronDown, ChevronRight } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, EmptyState, ConfirmDialog, SwipeRow } from '../components/ui'
+import { Modal, Field, EmptyState, ConfirmDialog, SwipeRow, RecordDetailModal } from '../components/ui'
 
 const STATUS_STYLE = {
   '未开始': 'bg-gray-100 text-gray-500',
@@ -18,6 +19,7 @@ export default function ProjectIdeas() {
   const [showArchived, setShowArchived] = useState(false)
   const [adding, setAdding] = useState(false)
   const [menuId, setMenuId] = useState(null)
+  const [detail, setDetail] = useState(null) // 点击某条项目弹出的详情卡片
   const [confirm, setConfirm] = useState(null) // { id, name }
 
   const all = data.project_ideas || []
@@ -73,15 +75,15 @@ export default function ProjectIdeas() {
                 onDelete={canDelete ? () => setConfirm({ id: p.id, name: p.name }) : undefined}
                 deleteLabel="删除"
               >
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-line last:border-0 hover:bg-gray-50/60 min-h-[64px]">
+                <div onClick={() => setDetail(p)} className="flex items-center gap-3 px-5 py-4 border-b border-line last:border-0 hover:bg-gray-50/60 cursor-pointer min-h-[64px]">
                   {p.pinned && <Pin size={14} className="text-warning shrink-0" />}
                   <ChevronRight size={15} className="text-ink-faint shrink-0 hidden md:block" />
-                  <Link to={`/projects/${p.id}`} className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 truncate hover:text-primary">{p.name}</p>
                     <p className="text-xs text-ink-faint truncate mt-0.5">{p.goal || '还没有写一句话目标'}</p>
-                  </Link>
+                  </div>
                   <span className="text-xs text-ink-faint hidden md:block whitespace-nowrap">{done}/{(p.steps || []).length} 步</span>
-                  <div className="relative">
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setMenuId(menuId === p.id ? null : p.id)}
                       className={'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium min-h-[44px] ' + (STATUS_STYLE[p.status] || STATUS_STYLE['未开始'])}
@@ -128,6 +130,25 @@ export default function ProjectIdeas() {
         itemName={confirm?.name}
         onCancel={() => setConfirm(null)}
         onConfirm={() => { remove('project_ideas', confirm.id); showToast('项目已删除。'); setConfirm(null) }}
+      />
+
+      {/* 点击项目条目弹出的完整详情卡片（保留完整详情页入口） */}
+      <RecordDetailModal
+        open={!!detail}
+        title={detail?.name || '项目详情'}
+        onClose={() => setDetail(null)}
+        fields={detail ? (() => {
+          const steps = detail.steps || []
+          const done = steps.filter((s) => s.done).length
+          return [
+            { label: '一句话目标', value: detail.goal },
+            { label: '当前状态', value: detail.status || '未开始' },
+            { label: '技术栈', type: 'tags', value: detail.stack },
+            { label: '进度', value: `${done}/${steps.length} 步完成` },
+            { label: '更新时间', value: detail.updated_at ? format(new Date(detail.updated_at), 'yyyy年M月d日 HH:mm') : '—' },
+            { label: '查看', type: 'action', value: '打开完整详情页', onClick: () => { setDetail(null); nav(`/projects/${detail.id}`) } },
+          ]
+        })() : []}
       />
     </div>
   )

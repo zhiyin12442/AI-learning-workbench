@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, ExternalLink, Search } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, EmptyState, ConfirmDialog, SwipeRow } from '../components/ui'
+import { Modal, Field, EmptyState, ConfirmDialog, SwipeRow, RecordDetailModal } from '../components/ui'
 
 const TABS = [
   { key: 'skill', label: 'Skills' },
@@ -36,6 +36,7 @@ export default function Resources() {
       category, name,
       url: fd.get('url'),
       description: fd.get('description'),
+      field: fd.get('field'),
       installed: fd.get('installed') === 'on',
     })
     setAdding(false)
@@ -58,7 +59,10 @@ export default function Resources() {
       { label: '链接', value: r.url, link: true },
       { label: '具体概念 / 方案', value: r.description },
     ]
-    if (r.category === 'skill') f.push({ label: '已安装', installed: true })
+    if (r.category === 'skill') {
+      f.push({ label: '领域', value: r.field })
+      f.push({ label: '已安装', installed: true, value: r.installed, onChange: (v) => { setDetail({ ...r, installed: v }); upsert('resources', { ...r, installed: v }) } })
+    }
     return f
   }
 
@@ -180,46 +184,25 @@ export default function Resources() {
               </>
             )}
             {tab === 'skill' && (
-              <label className="flex items-center gap-2 text-sm text-ink-soft mb-5 min-h-[44px] cursor-pointer">
-                <input type="checkbox" name="installed" className="w-4 h-4 accent-success" /> 是否已安装
-              </label>
+              <>
+                <Field label="领域（可自由填写，如：前端 / AI / 设计）"><input name="field" placeholder="该 Skill 所属的领域" className="w-full" /></Field>
+                <label className="flex items-center gap-2 text-sm text-ink-soft mb-5 min-h-[44px] cursor-pointer">
+                  <input type="checkbox" name="installed" className="w-4 h-4 accent-success" /> 是否已安装
+                </label>
+              </>
             )}
             <button type="submit" className="btn-primary w-full min-h-[44px]">保存</button>
           </form>
         </Modal>
       )}
 
-      {/* 详情弹窗（交付要求 五.2） */}
-      {detail && (
-        <Modal title="资源详情" onClose={() => setDetail(null)} maxW="max-w-[480px]">
-          <div className="space-y-4">
-            {detailFields(detail).map((f, i) => (
-              <div key={i}>
-                <p className="text-xs text-ink-faint mb-1">{f.label}</p>
-                {f.link ? (
-                  f.value ? (
-                    <a href={f.value} target="_blank" rel="noreferrer" className="text-sm text-primary inline-flex items-center gap-1 hover:underline break-all">
-                      {f.value} <ExternalLink size={13} />
-                    </a>
-                  ) : <p className="text-sm text-gray-700">—</p>
-                ) : f.installed ? (
-                  <label className="flex items-center gap-2 text-sm text-ink-soft min-h-[40px] cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={!!detail.installed}
-                      onChange={(e) => { const v = e.target.checked; setDetail({ ...detail, installed: v }); upsert('resources', { ...detail, installed: v }) }}
-                      className="w-4 h-4 accent-success"
-                    />
-                    {detail.installed ? '已安装 ✅' : '未安装'}
-                  </label>
-                ) : (
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{f.value || '—'}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </Modal>
-      )}
+      {/* 详情弹窗（交付要求 五.2，改为统一 RecordDetailModal） */}
+      <RecordDetailModal
+        open={!!detail}
+        title={detail?.name || '资源详情'}
+        onClose={() => setDetail(null)}
+        fields={detail ? detailFields(detail) : []}
+      />
 
       <ConfirmDialog
         open={!!confirm}

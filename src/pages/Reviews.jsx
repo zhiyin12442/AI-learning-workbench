@@ -5,7 +5,7 @@ import { zhCN } from 'date-fns/locale'
 import { Plus, Pencil, ArrowLeft, Trash2 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Field, EmptyState, TagPill, ConfirmDialog } from '../components/ui'
+import { Field, EmptyState, TagPill, ConfirmDialog, RecordDetailModal } from '../components/ui'
 
 const MOODS = ['收获很大', '有触动', '一般', '待改进']
 const SOURCES = ['自己', '他人']
@@ -14,7 +14,7 @@ export default function Reviews() {
   const { data, remove, canDelete, showToast } = useData()
   const list = [...(data.reviews || [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
   const [confirm, setConfirm] = useState(null) // { id, title }
-  const [expandedId, setExpandedId] = useState(null) // 展开查看（交付要求 七.2）
+  const [detail, setDetail] = useState(null) // 点击卡片弹出的完整详情卡片
 
   return (
     <div>
@@ -32,50 +32,47 @@ export default function Reviews() {
         </div>
       ) : (
         <div className="space-y-4">
-          {list.map((r) => {
-            const open = expandedId === r.id
-            return (
-              <div key={r.id} className="card p-5 relative">
-                {/* 点击卡片查看全文（不再直接进入编辑） */}
-                <button
-                  type="button"
-                  onClick={() => setExpandedId(open ? null : r.id)}
-                  className="block w-full text-left pr-8"
-                >
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <h3 className="font-semibold text-gray-900">{r.title}</h3>
-                    <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
-                    {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
-                  </div>
-                  <p className={'text-sm text-ink-soft ' + (open ? 'whitespace-pre-wrap' : 'line-clamp-2')}>{r.body}</p>
-                  <p className="text-xs text-ink-faint mt-2.5">
-                    {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
-                    {r.mood ? ' · ' + r.mood : ''}
-                    {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
-                  </p>
-                </button>
-
-                {/* 底部编辑按钮（交付要求 七.2） */}
-                <div className="mt-3 flex items-center gap-2">
-                  <Link
-                    to={`/reviews/${r.id}/edit`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 rounded-[10px] border border-line px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 min-h-[40px]"
-                  >编辑</Link>
+          {list.map((r) => (
+            <div key={r.id} className="card p-5 relative">
+              {/* 点击卡片弹出完整详情（不自动进入编辑页） */}
+              <button
+                type="button"
+                onClick={() => setDetail(r)}
+                className="block w-full text-left pr-8"
+              >
+                <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                  <h3 className="font-semibold text-gray-900">{r.title}</h3>
+                  <TagPill className={r.source === '自己' ? 'bg-primary/10 text-primary' : 'bg-accent/10 text-accent'}>{r.source === '自己' ? '自己的经验' : '他人的经验'}</TagPill>
+                  {(r.tags || []).map((t) => <TagPill key={t}>#{t}</TagPill>)}
                 </div>
+                <p className="text-sm text-ink-soft line-clamp-2">{r.body}</p>
+                <p className="text-xs text-ink-faint mt-2.5">
+                  {r.created_at ? format(new Date(r.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : ''}
+                  {r.mood ? ' · ' + r.mood : ''}
+                  {(r.linked_items || []).length ? ' · 关联：' + r.linked_items.join('、') : ''}
+                </p>
+              </button>
 
-                {canDelete && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setConfirm({ id: r.id, title: r.title }) }}
-                    className="absolute top-4 right-4 p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center"
-                    aria-label="删除"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                )}
+              {/* 底部编辑按钮（交付要求 七.2） */}
+              <div className="mt-3 flex items-center gap-2">
+                <Link
+                  to={`/reviews/${r.id}/edit`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 rounded-[10px] border border-line px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 min-h-[40px]"
+                >编辑</Link>
               </div>
-            )
-          })}
+
+              {canDelete && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setConfirm({ id: r.id, title: r.title }) }}
+                  className="absolute top-4 right-4 p-2 text-ink-faint hover:text-danger min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="删除"
+                >
+                  <Trash2 size={15} />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
@@ -86,6 +83,21 @@ export default function Reviews() {
         itemName={confirm?.title}
         onCancel={() => setConfirm(null)}
         onConfirm={() => { remove('reviews', confirm.id); showToast('复盘已删除。'); setConfirm(null) }}
+      />
+
+      {/* 点击复盘卡片弹出的完整详情卡片 */}
+      <RecordDetailModal
+        open={!!detail}
+        title={detail?.title || '复盘详情'}
+        onClose={() => setDetail(null)}
+        fields={detail ? [
+          { label: '来源', value: detail.source === '自己' ? '自己的经验' : '他人的经验' },
+          { label: '正文', value: detail.body },
+          { label: '标签', type: 'tags', value: detail.tags },
+          { label: '收获程度', value: detail.mood },
+          { label: '关联', value: (detail.linked_items || []).join('、') },
+          { label: '创建时间', value: detail.created_at ? format(new Date(detail.created_at), 'yyyy年M月d日 HH:mm', { locale: zhCN }) : '—' },
+        ] : []}
       />
     </div>
   )

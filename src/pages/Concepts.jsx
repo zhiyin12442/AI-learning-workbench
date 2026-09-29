@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, Link as LinkIcon, Search } from 'lucide-react'
 import { useData } from '../lib/store'
 import { Header } from '../components/Header'
-import { Modal, Field, Highlight, EmptyState, useHighlightTarget, ConfirmDialog, SwipeRow } from '../components/ui'
+import { Modal, Field, Highlight, EmptyState, useHighlightTarget, ConfirmDialog, SwipeRow, RecordDetailModal } from '../components/ui'
 
 const ACCENTS = ['#286ED3', '#4D3EB4', '#84CC16', '#F59E0B', '#EF4444', '#38BDF8']
 
@@ -16,6 +16,7 @@ export default function Concepts() {
   const [editing, setEditing] = useState(null) // null | {} | concept
   const [renaming, setRenaming] = useState(null)
   const [confirm, setConfirm] = useState(null) // { kind:'concept'|'group', table, id, name }
+  const [detail, setDetail] = useState(null) // 点击某条概念弹出的详情卡片
   const [activeGroup, setActiveGroup] = useState('全部')
   const hlId = useHighlightTarget()
 
@@ -150,7 +151,7 @@ export default function Concepts() {
                             editLabel="编辑"
                             deleteLabel="删除"
                           >
-                            <div id={'item-' + c.id} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
+                            <div id={'item-' + c.id} onClick={() => setDetail(c)} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 cursor-pointer ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
                               <div className="w-[200px] shrink-0 font-medium text-gray-800 truncate"><Highlight text={c.name} kw={kw} /></div>
                               <div className="flex-1 min-w-0 text-ink-soft">
                                 <p className={open ? '' : 'line-clamp-1'}>
@@ -161,7 +162,7 @@ export default function Concepts() {
                                     <span key={i} className="rounded-full px-2.5 py-0.5 text-xs bg-gray-100 text-ink-soft">{el}</span>
                                   ))}
                                   {c.description && c.description.length > 40 && (
-                                    <button onClick={() => setExpanded({ ...expanded, [c.id]: !open })} className="text-xs text-primary ml-1 min-h-[36px] px-2">
+                                    <button onClick={(e) => { e.stopPropagation(); setExpanded({ ...expanded, [c.id]: !open }) }} className="text-xs text-primary ml-1 min-h-[36px] px-2">
                                       {open ? '收起' : '展开全文'}
                                     </button>
                                   )}
@@ -228,6 +229,18 @@ export default function Concepts() {
           }
           setConfirm(null)
         }}
+      />
+
+      {/* 点击概念条目弹出的完整详情卡片 */}
+      <RecordDetailModal
+        open={!!detail}
+        title={detail?.name || '概念详情'}
+        onClose={() => setDetail(null)}
+        fields={detail ? [
+          { label: '所属分组', value: detail.group_name || '未分组' },
+          { label: '概念释义', value: detail.description },
+          { label: '标签', type: 'tags', value: detail.tags },
+        ] : []}
       />
     </div>
   )

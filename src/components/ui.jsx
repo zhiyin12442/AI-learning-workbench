@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Pencil, Trash2 } from 'lucide-react'
+import { X, Pencil, Trash2, ExternalLink } from 'lucide-react'
 
 export function Modal({ title, onClose, children, wide = false, maxW }) {
   useEffect(() => {
@@ -22,6 +22,53 @@ export function Modal({ title, onClose, children, wide = false, maxW }) {
         {children}
       </div>
     </div>
+  )
+}
+
+/**
+ * 通用「记录详情卡片」弹窗：点击某条记录后弹出，展示完整详细内容。
+ * 支持关闭（X 按钮）/ 点击遮罩外部 / Esc 返回列表（继承自 Modal）。
+ * fields 支持多种类型：
+ *   - 默认/type:'text'：普通文本（正文），value 可多行
+ *   - type:'link'：可点击外链（带 ExternalLink 图标）
+ *   - type:'tags'：标签数组，渲染为 #xxx 圆角胶囊
+ *   - type:'installed'：Skill 安装状态开关（value 为布尔，onChange 回调写回）
+ *   - type:'action'：底部主操作按钮（value 为按钮文案，onClick 回调）
+ */
+export function RecordDetailModal({ open, title, onClose, fields = [], maxW = 'max-w-[480px]' }) {
+  if (!open) return null
+  return (
+    <Modal title={title} onClose={onClose} maxW={maxW}>
+      <div className="space-y-4">
+        {fields.map((f, i) => (
+          <div key={i}>
+            {f.label && <p className="text-xs text-ink-faint mb-1">{f.label}</p>}
+            {f.type === 'link' ? (
+              f.value ? (
+                <a href={f.value} target="_blank" rel="noreferrer" className="text-sm text-primary inline-flex items-center gap-1 hover:underline break-all">
+                  {f.value} <ExternalLink size={13} />
+                </a>
+              ) : <p className="text-sm text-gray-700">—</p>
+            ) : f.type === 'tags' ? (
+              <div className="flex flex-wrap gap-1.5">
+                {(f.value || []).map((t, k) => (
+                  <span key={k} className="rounded-full px-2.5 py-0.5 text-xs bg-gray-100 text-ink-soft">#{t}</span>
+                ))}
+              </div>
+            ) : f.type === 'installed' ? (
+              <label className="flex items-center gap-2 text-sm text-ink-soft min-h-[40px] cursor-pointer">
+                <input type="checkbox" checked={!!f.value} onChange={(e) => f.onChange?.(e.target.checked)} className="w-4 h-4 accent-success" />
+                {f.value ? '已安装 ✅' : '未安装'}
+              </label>
+            ) : f.type === 'action' ? (
+              <button onClick={f.onClick} className="btn-primary w-full min-h-[44px]">{f.value}</button>
+            ) : (
+              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{f.value || '—'}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </Modal>
   )
 }
 
