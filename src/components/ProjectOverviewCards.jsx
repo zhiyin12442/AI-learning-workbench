@@ -90,7 +90,7 @@ export default function ProjectOverviewCards({ projects = SAMPLE_PROJECTS }) {
   return (
     <div ref={ref} className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-4">
       {projects.slice(0, 3).map((p, i) => (
-        <div key={i} className="w-full" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.05))' }}>
+        <div key={i} className="w-full" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))' }}>
           <ProjectOverviewCard {...p} cardW={cardW} />
         </div>
       ))}
