@@ -284,9 +284,11 @@ export function SwipeRow({ children, onEdit, onDelete, editLabel = '编辑', del
     if (!dragging) return
     setDragging(false)
     const x = dragX
-    if (x < -REVEAL_W / 2) { setOpen(true); setDragX(-REVEAL_W) }
+    // 只有「真的滑开操作按钮」才视为一次滑动手势；轻点/抖动不应抑制行内点击
+    const willOpen = x < -REVEAL_W / 2
+    if (willOpen) { setOpen(true); setDragX(-REVEAL_W) }
     else { setOpen(false); setDragX(0) }
-    if (moved.current) { suppress.current = true; setTimeout(() => { suppress.current = false }, 0) }
+    if (moved.current && willOpen) { suppress.current = true; setTimeout(() => { suppress.current = false }, 0) }
   }
   // 抑制拖动后的误点击（避免滑动后触发行内链接/导航）
   const onClickCapture = (e) => { if (suppress.current) { e.preventDefault(); e.stopPropagation() } }

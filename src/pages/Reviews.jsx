@@ -85,11 +85,12 @@ export default function Reviews() {
         onConfirm={() => { remove('reviews', confirm.id); showToast('复盘已删除。'); setConfirm(null) }}
       />
 
-      {/* 点击复盘卡片弹出的完整详情卡片 */}
+      {/* 点击复盘卡片弹出的完整详情卡片（宽度放大一倍：480px → 960px） */}
       <RecordDetailModal
         open={!!detail}
         title={detail?.title || '复盘详情'}
         onClose={() => setDetail(null)}
+        maxW="max-w-[960px]"
         fields={detail ? [
           { label: '来源', value: detail.source === '自己' ? '自己的经验' : '他人的经验' },
           { label: '正文', value: detail.body },
