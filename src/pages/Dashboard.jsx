@@ -10,13 +10,22 @@ export default function Dashboard() {
   const { data, upsert } = useData()
   const stats = computeStats(data)
 
-  // 任务进度半环形：分段占比与配色（交付要求 二.2）
-  const gaugeSegments = [
-    { label: '未开始', pct: 20, color: '#60A5FA' },
-    { label: '进行中', pct: 8, color: '#A78BFA' },
-    { label: '审核中', pct: 12, color: '#FBBF24' },
-    { label: '已完成', pct: 60, color: '#34D399' },
+  // 项目灵感数据（未归档），文件夹卡片与进度环均绑定此数据
+  const projects = (data.project_ideas || []).filter((p) => !p.archived)
+
+  // 「项目进度」半环形：按项目灵感的状态字段实时统计（未开始/进行中/审核中/已完成）
+  const STATUS_COLORS = [
+    { label: '未开始', color: '#60A5FA' },
+    { label: '进行中', color: '#A78BFA' },
+    { label: '审核中', color: '#FBBF24' },
+    { label: '已完成', color: '#34D399' },
   ]
+  const total = projects.length
+  const gaugeSegments = STATUS_COLORS.map(({ label, color }) => ({
+    label,
+    color,
+    pct: total ? Math.round((projects.filter((p) => p.status === label).length / total) * 100) : 0,
+  }))
 
   const recentLogs = [...(data.study_logs || [])]
     .sort((a, b) => (b.study_date > a.study_date ? 1 : -1))
@@ -38,15 +47,15 @@ export default function Dashboard() {
         <StatCard label="逾期任务" value={1} icon={AlertCircle} delta="-2%" up={false} color="text-danger" />
       </div>
 
-      {/* 中部：项目概览（自适应三卡） + 任务进度。minmax(0,1fr) 防止固定宽度子元素撑爆网格 */}
+      {/* 中部：项目灵感（文件夹卡片，点击进详情） + 项目进度。minmax(0,1fr) 防止固定宽度子元素撑爆网格 */}
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-5 mb-5">
         <div className="min-w-0">
-          <p className="text-base font-semibold text-gray-900 mb-3">项目概览</p>
-          <ProjectOverviewCards />
+          <p className="text-base font-semibold text-gray-900 mb-3">项目灵感</p>
+          <ProjectOverviewCards projects={projects} />
         </div>
         <div className="card p-5 h-fit min-w-0">
-          <p className="text-base font-semibold text-gray-900 mb-2">任务进度</p>
-          <TasksGauge total={27} segments={gaugeSegments} />
+          <p className="text-base font-semibold text-gray-900 mb-2">项目进度</p>
+          <TasksGauge total={total} segments={gaugeSegments} label="项目" />
           <ul className="mt-3 space-y-2">
             {gaugeSegments.map((s) => (
               <li key={s.label} className="flex items-center gap-2 text-[13px]">

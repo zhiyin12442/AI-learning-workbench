@@ -1,27 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Folder, CalendarDays, ClipboardList } from 'lucide-react'
 
 /**
- * ProjectOverviewCards —— 项目概览三张横向文件夹卡片（自适应流式布局）
+ * ProjectOverviewCards —— 项目灵感文件夹卡片（绑定真实 project_ideas 数据）
  *
- * 造型：保留文件夹标签形切角——顶部左侧为高出一段的标签区（放文件夹图标），
- * 在约 58% 宽度处斜切下 10px，右侧卡体顶边略低；四角圆角 14px。
- * 卡片宽度随容器自适应（grid 三等分），clip-path 的 path() 坐标按实测宽度动态计算；
- * 因 clip-path 会裁掉 box-shadow，阴影用外层 filter: drop-shadow 贴合形状。
+ * 交互逻辑与「项目灵感」板块一致：
+ * - 卡片数量 = 活跃项目数量（1 个项目只显示 1 张卡，新增项目自动增加卡片）
+ * - 每行最多 3 张，超出自动换行向下排列
+ * - 每张卡的文件夹图标色 = 进度条色，卡片之间互不重复（调色板循环）
+ * - 点击卡片进入该项目详情页 /projects/:id
  *
- * 内部顺序：文件夹图标 → 项目名 → 截止日期(左) + 任务数(右) → 进度条 + 百分比。
- * 已按需求：全中文文案、无头像、无 hover 动效（与全站静态阴影规范一致）。
+ * 造型：保留文件夹标签形切角（clip-path 动态计算），阴影用外层 drop-shadow。
  */
 
 // 卡片固定高度（宽度自适应）
 const CARD_H = 168
 
-// 参考图默认样例数据（中文文案，无头像）
-const SAMPLE_PROJECTS = [
-  { title: 'SamCart 网页设计', color: '#84CC16', deadline: '2025年12月10日', tasks: 24, progress: 68, percent: 80 },
-  { title: 'InstaSupply 应用设计', color: '#A78BFA', deadline: '2025年12月25日', tasks: 18, progress: 53, percent: 60 },
-  { title: 'Kuppl 仪表盘设计', color: '#38BDF8', deadline: '2026年1月16日', tasks: 28, progress: 32, percent: 20 },
-]
+// 独立调色板：图标色与进度条色一一对应，卡片之间互不重复
+const PALETTE = ['#84CC16', '#A78BFA', '#38BDF8', '#F59E0B', '#F472B6', '#34D399']
 
 // 按实测宽度动态生成文件夹标签形轮廓（四角圆弧 14px，斜切落差 10px）
 function folderClipPath(w, h = CARD_H) {
@@ -32,7 +29,7 @@ function folderClipPath(w, h = CARD_H) {
   return `path('M ${R} 0 L ${tabEnd} 0 L ${slantEnd} ${DROP} L ${w - R} ${DROP} A ${R} ${R} 0 0 1 ${w} ${DROP + R} L ${w} ${h - R} A ${R} ${R} 0 0 1 ${w - R} ${h} L ${R} ${h} A ${R} ${R} 0 0 1 0 ${h - R} L 0 ${R} A ${R} ${R} 0 0 1 ${R} 0 Z')`
 }
 
-// 测量容器宽度（供动态 clip-path 使用）
+// 测量容器宽度（供动态 clip-path 与列数计算使用）
 function useContainerWidth() {
   const ref = useRef(null)
   const [w, setW] = useState(0)
@@ -46,30 +43,35 @@ function useContainerWidth() {
   return { ref, width: w }
 }
 
-function ProjectOverviewCard({ title, color, deadline, tasks, progress, percent, cardW }) {
+function FolderCard({ project, color, cardW }) {
+  const steps = project.steps || []
+  const tasks = steps.length
+  const progress = tasks ? Math.round((steps.filter((s) => s.done).length / tasks) * 100) : 0
+  const date = project.deadline || (project.updated_at ? project.updated_at.slice(0, 10) : '')
   return (
-    <div
+    <Link
+      to={`/projects/${project.id}`}
       className="flex w-full flex-col bg-white p-4 pt-3.5"
       style={{ height: CARD_H, clipPath: folderClipPath(cardW) }}
     >
-      {/* 1. 顶部文件夹图标（扁平实心，主题色） */}
+      {/* 1. 顶部文件夹图标（扁平实心，本卡专属色） */}
       <Folder className="h-[18px] w-[22px]" style={{ color }} fill={color} strokeWidth={1.5} />
 
       {/* 2. 项目名称（黑色，粗体，左对齐） */}
-      <h3 className="mt-2.5 truncate text-[16px] font-bold leading-tight text-gray-900">{title}</h3>
+      <h3 className="mt-2.5 truncate text-[16px] font-bold leading-tight text-gray-900">{project.name}</h3>
 
-      {/* 3. 截止日期（左，日历图标） + 任务数（右，剪贴板图标），同一行 */}
+      {/* 3. 日期（左，日历图标） + 任务数（右，剪贴板图标），同一行 */}
       <div className="mt-2.5 flex items-center justify-between text-xs text-gray-400">
         <span className="inline-flex min-w-0 items-center gap-1">
           <CalendarDays size={13} className="shrink-0" />
-          <span className="truncate">截止日期: {deadline}</span>
+          <span className="truncate">{date ? `截止日期: ${date}` : '暂无截止日期'}</span>
         </span>
         <span className="inline-flex shrink-0 items-center gap-1">
           <ClipboardList size={13} /> {tasks} 个任务
         </span>
       </div>
 
-      {/* 4. 底部进度条（胶囊形，浅灰底+主题色填充） + 百分比数字（右，黑） */}
+      {/* 4. 底部进度条（胶囊形，本卡专属色填充） + 百分比数字（右，黑） */}
       <div className="mt-auto flex items-center gap-3">
         <div className="h-[6px] flex-1 overflow-hidden rounded-full bg-gray-200">
           <div
@@ -77,21 +79,37 @@ function ProjectOverviewCard({ title, color, deadline, tasks, progress, percent,
             style={{ width: `${Math.min(100, Math.max(0, progress))}%`, backgroundColor: color }}
           />
         </div>
-        <span className="text-[15px] font-semibold text-gray-900">{percent}</span>
+        <span className="text-[15px] font-semibold text-gray-900">{progress}</span>
       </div>
-    </div>
+    </Link>
   )
 }
 
-export default function ProjectOverviewCards({ projects = SAMPLE_PROJECTS }) {
+export default function ProjectOverviewCards({ projects = [] }) {
   const { ref, width } = useContainerWidth()
-  // 三等分：cardW = (容器宽 - 两个间距) / 3，间距 16px
-  const cardW = width > 0 ? Math.floor((width - 32) / 3) : 300
+
+  // 列数：响应容器宽度（每行最多 3），超出自动换行由 grid 完成
+  const gridCols = width === 0 ? 3 : width < 480 ? 1 : width < 780 ? 2 : 3
+  const gap = 16
+  const cardW = width > 0 ? Math.floor((width - gap * (gridCols - 1)) / gridCols) : 300
+
+  if (!projects.length) {
+    return (
+      <div ref={ref} className="card flex h-32 items-center justify-center text-sm text-ink-soft">
+        暂无项目，去「项目灵感」新增一个吧
+      </div>
+    )
+  }
+
   return (
-    <div ref={ref} className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-4">
-      {projects.slice(0, 3).map((p, i) => (
-        <div key={i} className="w-full" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))' }}>
-          <ProjectOverviewCard {...p} cardW={cardW} />
+    <div
+      ref={ref}
+      className="grid gap-4"
+      style={{ gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))` }}
+    >
+      {projects.map((p, i) => (
+        <div key={p.id} className="w-full" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))' }}>
+          <FolderCard project={p} color={PALETTE[i % PALETTE.length]} cardW={cardW} />
         </div>
       ))}
     </div>

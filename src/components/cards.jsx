@@ -36,7 +36,7 @@ export default function ProjectCard({ project, progress, color = 'lime', tasks }
 }
 
 // 半圆环分段仪表盘（交付要求 二.2）：灰色背景环 + 彩色分段弧 + 中心总任务数
-export function TasksGauge({ total = 27, segments }) {
+export function TasksGauge({ total = 27, segments, label = '总任务' }) {
   const R = 92
   const CX = 110
   const CY = 104
@@ -71,7 +71,7 @@ export function TasksGauge({ total = 27, segments }) {
       {/* 灰色背景半圆环 */}
       <path d={`M ${CX - R} ${CY} A ${R} ${R} 0 0 1 ${CX + R} ${CY}`} stroke="#F3F4F6" strokeWidth={SW} fill="none" />
       {arcs}
-      <text x={CX} y={CY - 32} textAnchor="middle" className="fill-gray-500" fontSize="13">总任务</text>
+      <text x={CX} y={CY - 32} textAnchor="middle" className="fill-gray-500" fontSize="13">{label}</text>
       <text x={CX} y={CY - 4} textAnchor="middle" className="fill-gray-900" fontSize="28" fontWeight="700">{total}</text>
     </svg>
   )
