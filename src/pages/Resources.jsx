@@ -72,7 +72,7 @@ export default function Resources() {
 
       {/* Tabs */}
       <div className="flex items-center gap-2 mb-5 flex-wrap">
-        <div className="flex gap-1 bg-white rounded-full p-1 shadow-card">
+        <div className="flex gap-1 bg-white rounded-full p-1 shadow-card-shadow">
           {TABS.map((t) => (
             <button
               key={t.key}

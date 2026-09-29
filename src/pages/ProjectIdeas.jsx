@@ -49,7 +49,7 @@ export default function ProjectIdeas() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={'px-4 py-2 rounded-full text-sm min-h-[44px] ' + (filter === s ? 'bg-ink text-white font-medium' : 'bg-white shadow-card text-ink-soft hover:text-gray-900')}
+            className={'px-4 py-2 rounded-full text-sm min-h-[44px] ' + (filter === s ? 'bg-ink text-white font-medium' : 'bg-white shadow-card-shadow text-ink-soft hover:text-gray-900')}
           >{s}</button>
         ))}
         <button onClick={() => setShowArchived(!showArchived)} className="btn-ghost min-h-[44px]">
@@ -89,7 +89,7 @@ export default function ProjectIdeas() {
                       {p.status || '未开始'} <ChevronDown size={13} />
                     </button>
                     {menuId === p.id && (
-                      <div className="absolute right-0 top-full mt-4 z-50 w-full card p-1 shadow-card">
+                      <div className="absolute right-0 top-full mt-4 z-50 w-full card p-1 shadow-card-shadow">
                         {Object.keys(STATUS_STYLE).map((s) => (
                           <button key={s} onClick={() => { setStatus(p, s); setMenuId(null) }} className="w-full text-left px-3 py-2 text-sm rounded-[8px] hover:bg-gray-50 min-h-[44px]">{s}</button>
                         ))}

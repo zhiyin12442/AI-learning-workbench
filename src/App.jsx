@@ -31,7 +31,7 @@ function Shell() {
           {/* 小屏（手机 <768px）顶部汉堡；iPad 及以上显示左侧固定侧边栏 */}
           <button
             onClick={() => setMobileNav(true)}
-            className="md:hidden mb-4 bg-white shadow-card rounded-[10px] px-4 py-2.5 text-sm text-gray-600 min-h-[44px]"
+            className="md:hidden mb-4 bg-white shadow-card-shadow rounded-[10px] px-4 py-2.5 text-sm text-gray-600 min-h-[44px]"
           >☰ 菜单</button>
           <Routes>
             <Route path="/" element={<Dashboard />} />

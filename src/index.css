@@ -26,7 +26,7 @@
   }
   .card {
     /* 统一常驻静态阴影 0 4px 12px rgba(0,0,0,0.08)（与文件夹卡片同款立体感，浅底上清晰可见），不随悬停变化 */
-    @apply bg-card rounded-card shadow-card;
+    @apply bg-card rounded-card shadow-card-shadow;
   }
 }
 

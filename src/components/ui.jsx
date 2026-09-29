@@ -10,7 +10,7 @@ export function Modal({ title, onClose, children, wide = false, maxW }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onMouseDown={onClose}>
       <div
-        className={'card w-full shadow-card ' + (maxW || (wide ? 'max-w-2xl' : 'max-w-lg')) + ' p-6 max-h-[85vh] overflow-y-auto'}
+        className={'card w-full shadow-card-shadow ' + (maxW || (wide ? 'max-w-2xl' : 'max-w-lg')) + ' p-6 max-h-[85vh] overflow-y-auto'}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
