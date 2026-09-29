@@ -29,7 +29,7 @@ function SyncCard() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="mt-3 w-full flex items-center gap-2.5 bg-white rounded-card shadow-card p-3 text-left hover:shadow-card-hover transition-all duration-200"
+        className="mt-3 w-full flex items-center gap-2.5 bg-white rounded-card shadow-card p-3 text-left"
       >
         <span className={'w-2.5 h-2.5 rounded-full ' + dotCls} />
         <div className="min-w-0 flex-1">
