@@ -5,29 +5,41 @@ import { SEED } from './seed'
 const LS_DATA = 'nexdo-data'
 const LS_PENDING = 'nexdo-pending'
 const LS_DELETES = 'nexdo-deletes'
-// 升级 key 以丢弃旧版本的随机同步码，强制所有设备回到共享工作区，开箱即自动同步
-const LS_WS = 'nexdo-wsid-v2'
+// v3：强制使用 uuid 工作区（v2 曾用字符串 'nexdo-shared-0001'，与云端 uuid 列冲突导致整表同步失败）
+const LS_WS = 'nexdo-wsid-v3'
 // 只读模式：开启后禁止删除任何内容（防误删 / 权限控制）
 const LS_READONLY = 'nexdo-readonly'
 
 const DataCtx = createContext(null)
 export const useData = () => useContext(DataCtx)
 
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v)
+
 const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
-    : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36)
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0
+        const v = c === 'x' ? r : (r & 0x3) | 0x8
+        return v.toString(16)
+      })
 
-// 共享工作区 ID：写死在代码/环境变量里，所有设备默认使用同一个，装好即自动同步，
-// 不再需要手动复制粘贴同步码。仅在「切换工作区」时才会被本地覆盖。
-const DEFAULT_WSID = import.meta.env.VITE_WORKSPACE_ID || 'nexdo-shared-0001'
+// 共享工作区 ID：必须是合法 uuid（云端 user_id 为 uuid 列）。所有设备默认使用同一个固定 uuid，
+// 装好即自动共用同一份云端数据，无需手动交换同步码。仅「切换工作区」时才会被本地覆盖。
+const SHARED_WSID = '9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d'
+const DEFAULT_WSID =
+  import.meta.env.VITE_WORKSPACE_ID && isUuid(import.meta.env.VITE_WORKSPACE_ID)
+    ? import.meta.env.VITE_WORKSPACE_ID
+    : SHARED_WSID
 
 function getWorkspaceId() {
   try {
-    return localStorage.getItem(LS_WS) || DEFAULT_WSID
-  } catch {
-    return DEFAULT_WSID
-  }
+    const v = localStorage.getItem(LS_WS)
+    // 仅接受合法 uuid；旧版本遗留的字符串同步码一律丢弃，回归默认共享工作区
+    if (v && isUuid(v)) return v
+  } catch { /* ignore */ }
+  return DEFAULT_WSID
 }
 
 function loadLocal() {
@@ -65,11 +77,20 @@ export function DataProvider({ children }) {
         if (!error && rows) cloud[t] = rows
       }
       if (cancelled) return
-      // 云端有数据则以云端为准；云端为空则保留本地/示例数据（避免误清空）
+      // 本地为权威：永远保留本地的增删改结果，绝不被云端旧数据整表覆盖。
+      // 仅当云端存在「本地没有」且「非用户已删除」的行时才并入（并集），
+      // 从而彻底杜绝「新增被清 / 删除后复活」。
+      const deletes = new Set(readDeletes().map((d) => d.id))
       setData((prev) => {
-        const merged = { ...prev }
-        for (const t of TABLES) if (cloud[t] && cloud[t].length) merged[t] = cloud[t]
-        return merged
+        const base = { ...prev }
+        TABLES.forEach((t) => { if (!Array.isArray(base[t])) base[t] = [] })
+        for (const t of TABLES) {
+          const cloudRows = (cloud[t] || []).filter((r) => isUuid(r.id) && !deletes.has(r.id))
+          const localIds = new Set(base[t].map((r) => r.id))
+          const additions = cloudRows.filter((r) => !localIds.has(r.id))
+          if (additions.length) base[t] = [...base[t], ...additions]
+        }
+        return base
       })
       flushPending(wsId)
       flushDeletes(wsId)
@@ -114,11 +135,16 @@ export function DataProvider({ children }) {
 
   // ---------- 持久化（防抖 1.5s） ----------
   const flush = useCallback(async (tables) => {
-    // 始终写入本地缓存，保证离线/无网络也不丢
+    // 始终写入本地缓存，保证离线/无网络也不丢（本地为权威副本）
     localStorage.setItem(LS_DATA, JSON.stringify(data))
     if (!isSupabaseConfigured) return
     for (const t of tables) {
-      const rows = (data[t] || []).map((r) => ({ ...r, user_id: wsId }))
+      // 仅同步主键为合法 uuid 的行：种子演示行使用固定 id，不影响云端；
+      // 过滤掉非 uuid 行可避免整表 upsert 因单行类型错误而 400 失败。
+      const rows = (data[t] || [])
+        .filter((r) => isUuid(r.id))
+        .map((r) => ({ ...r, user_id: wsId }))
+      if (!rows.length) continue
       const { error } = await supabase.from(t).upsert(rows)
       if (error) {
         const pend = readPending()

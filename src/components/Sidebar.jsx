@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import {
   LayoutGrid, Bell, BookOpen, NotebookPen, FolderKanban, Lightbulb,
-  History, ArrowUpRight, Cloud, CloudOff, KeyRound, X,
+  History, Cloud, CloudOff, KeyRound, X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -138,9 +138,11 @@ export default function Sidebar({ mobile = false, onNavigate }) {
   return (
     <aside className={(mobile ? 'w-full ' : 'w-[240px] md:w-[190px] lg:w-[240px] hidden md:flex ') + 'shrink-0 p-4 lg:p-6 lg:pr-4 flex-col overflow-y-auto'}>
       <Link to="/" className="flex items-center gap-2.5 mb-8" onClick={onNavigate}>
-        <span className="w-9 h-9 rounded-[10px] bg-accent flex items-center justify-center">
-          <ArrowUpRight size={18} className="text-white" strokeWidth={2.5} />
-        </span>
+        <img
+          src="/cat-icon-1024.png"
+          alt="Nexdo"
+          className="w-9 h-9 rounded-[10px] shadow-card-shadow object-cover"
+        />
         <span className="text-xl font-bold tracking-tight text-gray-900">Nexdo</span>
       </Link>
 

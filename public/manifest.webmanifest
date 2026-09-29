@@ -1,0 +1,13 @@
+{
+  "name": "Nexdo · AI 学习工作台",
+  "short_name": "Nexdo",
+  "description": "概念学习 / 学习记录 / 项目搜集 / 项目灵感 / 经验复盘 一体化的 AI 学习工作台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E4E9F2",
+  "theme_color": "#4D3EB4",
+  "icons": [
+    { "src": "/cat-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/cat-icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}
