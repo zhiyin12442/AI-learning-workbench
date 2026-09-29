@@ -26,30 +26,28 @@ export default function Dashboard() {
     <div>
       <Header title="总览" />
       {/* 全局搜索框仅保留在总览页（交付要求 5） */}
-      <div className="mb-6">
+      <div className="mb-5">
         <GlobalSearch />
       </div>
 
       {/* 统计卡 */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
         <StatCard label="累计学习视频" value={stats.totalVideos} icon={FileText} delta="+7%" />
         <StatCard label="进行中项目" value={stats.activeProjects} icon={CheckSquare} delta="+3%" color="text-warning" />
         <StatCard label="已完成概念" value={stats.doneConcepts} icon={CheckCircle2} delta="+6%" />
         <StatCard label="逾期任务" value={1} icon={AlertCircle} delta="-2%" up={false} color="text-danger" />
       </div>
 
-      {/* 中部：项目概览 + 任务进度 */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 mb-6">
-        <div>
-          <p className="text-base font-semibold text-gray-900 mb-4">项目概览</p>
-          <div className="overflow-x-auto">
-            <ProjectOverviewCards />
-          </div>
+      {/* 中部：项目概览（自适应三卡） + 任务进度。minmax(0,1fr) 防止固定宽度子元素撑爆网格 */}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-5 mb-5">
+        <div className="min-w-0">
+          <p className="text-base font-semibold text-gray-900 mb-3">项目概览</p>
+          <ProjectOverviewCards />
         </div>
-        <div className="card p-5 h-fit">
+        <div className="card p-5 h-fit min-w-0">
           <p className="text-base font-semibold text-gray-900 mb-2">任务进度</p>
           <TasksGauge total={27} segments={gaugeSegments} />
-          <ul className="mt-3 space-y-2.5">
+          <ul className="mt-3 space-y-2">
             {gaugeSegments.map((s) => (
               <li key={s.label} className="flex items-center gap-2 text-[13px]">
                 <span className="w-2.5 h-2.5 rounded-[2px]" style={{ background: s.color }} />
@@ -62,11 +60,11 @@ export default function Dashboard() {
       </div>
 
       {/* 底部：最近学习记录 + 最新动态 */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-6 pb-2">
-        <div className="card p-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-5 pb-2">
+        <div className="card p-5 min-w-0">
           <p className="text-base font-semibold text-gray-900 mb-4">任务总览</p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[620px]">
+            <table className="w-full text-sm min-w-[520px]">
               <thead>
                 <tr className="text-left text-xs text-ink-soft bg-gray-50 rounded-[10px]">
                   <th className="py-2.5 pl-3 pr-2 font-medium rounded-l-[10px] w-10">#</th>
