@@ -39,10 +39,12 @@ export function RecordDetailModal({ open, title, onClose, fields = [], maxW = 'm
   if (!open) return null
   return (
     <Modal title={title} onClose={onClose} maxW={maxW}>
-      <div className="space-y-4">
+      <div className="space-y-0">
         {fields.map((f, i) => (
-          <div key={i}>
-            {f.label && <p className="text-xs text-ink-faint mb-1">{f.label}</p>}
+          <div key={i} className={i === 0 ? '' : 'border-t border-line pt-4 mt-4'}>
+            {f.label && (
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-faint mb-1.5">{f.label}</p>
+            )}
             {f.type === 'link' ? (
               f.value ? (
                 <a href={f.value} target="_blank" rel="noreferrer" className="text-sm text-primary inline-flex items-center gap-1 hover:underline break-all">
@@ -63,7 +65,7 @@ export function RecordDetailModal({ open, title, onClose, fields = [], maxW = 'm
             ) : f.type === 'action' ? (
               <button onClick={f.onClick} className="btn-primary w-full min-h-[44px]">{f.value}</button>
             ) : (
-              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{f.value || '—'}</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words leading-relaxed">{f.value || '—'}</p>
             )}
           </div>
         ))}

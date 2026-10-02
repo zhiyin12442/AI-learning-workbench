@@ -65,6 +65,7 @@ export function DataProvider({ children }) {
   const dirty = useRef(new Set())
   const timer = useRef(null)
   const pendingRef = useRef([])
+  const dataRef = useRef(data)
 
   // ---------- 加载云端数据（按同步码过滤）；未配置 Supabase 则仅本地 ----------
   useEffect(() => {
@@ -94,6 +95,16 @@ export function DataProvider({ children }) {
       })
       flushPending(wsId)
       flushDeletes(wsId)
+      // 云端就绪后，主动把「本地当前数据」补推到云端：覆盖 LS_PENDING 之外的遗留本地增删，
+      // 保证多端真正同步（例如昨天在电脑端新增/删除、但当时因 RLS 写失败而只留在本机的记录）。
+      // upsert 按 id 幂等，不会误删云端其它设备的行。
+      try {
+        const cur = dataRef.current
+        for (const t of TABLES) {
+          const rows = (cur[t] || []).filter((r) => isUuid(r.id)).map((r) => ({ ...r, user_id: wsId }))
+          if (rows.length) await supabase.from(t).upsert(rows)
+        }
+      } catch { /* ignore */ }
       setCloudReady(true)
     })()
     return () => { cancelled = true }
@@ -132,6 +143,9 @@ export function DataProvider({ children }) {
     window.addEventListener('online', onOnline)
     return () => window.removeEventListener('online', onOnline)
   }, [wsId])
+
+  // 始终保存最新 data 引用，供加载完成后「主动补推云端」使用
+  useEffect(() => { dataRef.current = data }, [data])
 
   // ---------- 持久化（防抖 1.5s） ----------
   const flush = useCallback(async (tables) => {

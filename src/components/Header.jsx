@@ -71,7 +71,7 @@ export function GlobalSearch({ autoFocusHint = true }) {
             else if (e.key === 'Escape') setOpen(false)
           }}
           placeholder="快速查找"
-          className="w-full rounded-[16px] bg-white border border-gray-200 pl-10 pr-4 py-2 text-sm"
+          className="w-full rounded-card bg-white border border-gray-200 pl-10 pr-4 py-2 text-sm"
         />
       </div>
       {open && q.trim() && (

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import {
-  LayoutGrid, Bell, BookOpen, NotebookPen, FolderKanban, Lightbulb,
+  LayoutGrid, BookOpen, NotebookPen, FolderKanban, Lightbulb,
   History, Cloud, CloudOff, KeyRound, X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
@@ -140,10 +140,10 @@ export default function Sidebar({ mobile = false, onNavigate }) {
       <Link to="/" className="flex items-center gap-2.5 mb-8" onClick={onNavigate}>
         <img
           src="/cat-icon-1024.png"
-          alt="Nexdo"
+          alt="Steven"
           className="w-9 h-9 rounded-[10px] shadow-card-shadow object-cover"
         />
-        <span className="text-xl font-bold tracking-tight text-gray-900">Nexdo</span>
+        <span className="text-xl font-bold tracking-tight text-gray-900">Steven</span>
       </Link>
 
       <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">概览</p>
@@ -155,10 +155,6 @@ export default function Sidebar({ mobile = false, onNavigate }) {
 
       <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">工具</p>
       <nav className="flex flex-col gap-1">
-        <div className={itemCls({ isActive: false })}>
-          <Bell size={17} /> 通知
-          <span className="ml-auto w-5 h-5 rounded-full bg-danger text-white text-[11px] flex items-center justify-center">5</span>
-        </div>
         <NavLink to="/concepts" className={itemCls} onClick={onNavigate}><BookOpen size={17} /> 概念学习</NavLink>
         <NavLink to="/studylog" className={itemCls} onClick={onNavigate}><NotebookPen size={17} /> 学习记录</NavLink>
         <NavLink to="/resources" className={itemCls} onClick={onNavigate}><FolderKanban size={17} /> 项目搜集</NavLink>
