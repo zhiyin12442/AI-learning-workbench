@@ -16,6 +16,23 @@ export const useData = () => useContext(DataCtx)
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v)
 
+// 每张表在 Supabase 中真实存在的列。upsert 前只保留这些列，
+// 避免前端临时字段（如编辑态、UI 标记）被一起发出，导致整批写入 400 失败。
+const SCHEMA_COLS = {
+  concepts: ['id', 'user_id', 'group_name', 'name', 'description', 'tags', 'pinned', 'created_at', 'updated_at'],
+  study_logs: ['id', 'user_id', 'video_name', 'study_date', 'platform', 'topic', 'duration_minutes', 'note', 'skill_installed', 'created_at'],
+  resources: ['id', 'user_id', 'category', 'name', 'url', 'description', 'installed', 'created_at'],
+  project_ideas: ['id', 'user_id', 'name', 'status', 'goal', 'stack', 'required_skills', 'steps', 'reference_links', 'notes', 'archived', 'pinned', 'created_at', 'updated_at'],
+  reviews: ['id', 'user_id', 'title', 'body', 'source', 'linked_items', 'tags', 'mood', 'created_at', 'updated_at'],
+}
+const pickCols = (t, r) => {
+  const cols = SCHEMA_COLS[t]
+  if (!cols) return r
+  const out = {}
+  for (const k of cols) if (r[k] !== undefined) out[k] = r[k]
+  return out
+}
+
 const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
@@ -101,7 +118,7 @@ export function DataProvider({ children }) {
       try {
         const cur = dataRef.current
         for (const t of TABLES) {
-          const rows = (cur[t] || []).filter((r) => isUuid(r.id)).map((r) => ({ ...r, user_id: wsId }))
+          const rows = (cur[t] || []).filter((r) => isUuid(r.id)).map((r) => pickCols(t, { ...r, user_id: wsId }))
           if (rows.length) await supabase.from(t).upsert(rows)
         }
       } catch { /* ignore */ }
@@ -119,7 +136,7 @@ export function DataProvider({ children }) {
     if (!items.length || !supabase) return
     const rest = []
     for (const it of items) {
-      const { error } = await supabase.from(it.table).upsert({ ...it.row, user_id: workspaceId })
+      const { error } = await supabase.from(it.table).upsert(pickCols(it.table, { ...it.row, user_id: workspaceId }))
       if (error) rest.push(it)
     }
     localStorage.setItem(LS_PENDING, JSON.stringify(rest))
@@ -157,7 +174,7 @@ export function DataProvider({ children }) {
       // 过滤掉非 uuid 行可避免整表 upsert 因单行类型错误而 400 失败。
       const rows = (data[t] || [])
         .filter((r) => isUuid(r.id))
-        .map((r) => ({ ...r, user_id: wsId }))
+        .map((r) => pickCols(t, { ...r, user_id: wsId }))
       if (!rows.length) continue
       const { error } = await supabase.from(t).upsert(rows)
       if (error) {
