@@ -34,6 +34,45 @@ const pickCols = (t, r) => {
   return out
 }
 
+// ---------- 双向合并（last-write-wins，按 updated_at） ----------
+// 目的：让任意两台设备加载云端后「收敛」到完全一致的数据，杜绝：
+//  - 删除复活：云端 deleted=true 的行会同步回本地并回推云端；
+//  - 新增消失：云端存在而本地没有的行会被并入本地；
+//  - 内容不一致：同一行被某端改过，按 updated_at 取较新版本（双方最终一致）。
+// 合并结果随后会被整体回推云端（upsert 按 id 幂等，不会误删其它端行）。
+function mergeData(local, cloud, deletes) {
+  const out = {}
+  const tOf = (r) => (r && r.updated_at ? Date.parse(r.updated_at) || 0 : 0)
+  for (const t of TABLES) {
+    const L = (local[t] || []).filter((r) => isUuid(r.id))
+    const C = (cloud[t] || []).filter((r) => isUuid(r.id) && !deletes.has(r.id))
+    const map = new Map()
+    for (const r of L) map.set(r.id, { ...r })
+    for (const r of C) {
+      const ex = map.get(r.id)
+      if (!ex) {
+        // 云端有、本地没有：未删除则并入；已删除则不重新引入
+        if (!r.deleted) map.set(r.id, { ...r })
+      }       else if (r.deleted) {
+        // 云端标记删除 → 直接采用云端整行（删除权威，杜绝复活；并保持一致的时间戳）
+        map.set(r.id, { ...r })
+      } else if (ex.deleted) {
+        // 本地已删、云端存活：本地删除较新（或同时）则以删除为准并回推；否则云端较新 → 复活
+        if (tOf(ex) >= tOf(r)) {
+          map.set(r.id, { ...ex, deleted: true })
+        } else {
+          map.set(r.id, { ...r })
+        }
+      } else {
+        // 双方均存活：取 updated_at 较新者
+        if (tOf(r) >= tOf(ex)) map.set(r.id, { ...r })
+      }
+    }
+    out[t] = [...map.values()]
+  }
+  return out
+}
+
 const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
@@ -85,54 +124,50 @@ export function DataProvider({ children }) {
   const pendingRef = useRef([])
   const dataRef = useRef(data)
 
-  // ---------- 加载云端数据（按同步码过滤）；未配置 Supabase 则仅本地 ----------
-  useEffect(() => {
-    if (!isSupabaseConfigured) { setCloudReady(false); return }
-    let cancelled = false
-    ;(async () => {
+  // ---------- 重新同步（双向合并 + 回推 + 二次合并） ----------
+  // 这是「多端最终一致」的核心：任何时刻触发 syncNow，都会把本地∪云端按
+  // updated_at 收敛、删除标记双向同步，并把合并后的真相回推云端。
+  // 挂载、联网、以及每 20 秒后台轮询都会调用它，确保任意一端的变化自动传播到另一端。
+  const syncingRef = useRef(false)
+  const syncNow = useCallback(async () => {
+    if (!isSupabaseConfigured || syncingRef.current) return
+    syncingRef.current = true
+    try {
+      const local = dataRef.current
       const cloud = {}
       for (const t of TABLES) {
         const { data: rows, error } = await supabase.from(t).select('*').eq('user_id', wsId)
         if (!error && rows) cloud[t] = rows
       }
-      if (cancelled) return
-      // 本地为权威：永远保留本地的增删改结果，绝不被云端旧数据整表覆盖。
-      // 仅当云端存在「本地没有」且「非用户已删除」的行时才并入（并集），
-      // 从而彻底杜绝「新增被清 / 删除后复活」。
       const deletes = new Set(readDeletes().map((d) => d.id))
-      setData((prev) => {
-        const base = { ...prev }
-        TABLES.forEach((t) => { if (!Array.isArray(base[t])) base[t] = [] })
-        for (const t of TABLES) {
-          const cloudRows = (cloud[t] || []).filter((r) => isUuid(r.id) && !deletes.has(r.id))
-          const localIds = new Set(base[t].map((r) => r.id))
-          // 把云端的「已删除」标记合并回本地：软删除跨设备生效，彻底杜绝删除后复活
-          for (const cr of cloudRows) {
-            if (cr.deleted && localIds.has(cr.id)) {
-              base[t] = base[t].map((r) => (r.id === cr.id ? { ...r, deleted: true } : r))
-            }
-          }
-          const additions = cloudRows.filter((r) => !r.deleted && !localIds.has(r.id))
-          if (additions.length) base[t] = [...base[t], ...additions]
-        }
-        return base
-      })
+      // 双向合并：本地 ∪ 云端，按 updated_at 取较新版本，删除标记双向同步
+      let merged = mergeData(local, cloud, deletes)
+      // 回推合并后的真相（修复：旧逻辑推的是合并前的旧本地数据，导致删除复活/新增消失）
       flushPending(wsId)
-      flushDeletes(wsId)
-      // 云端就绪后，主动把「本地当前数据」补推到云端：覆盖 LS_PENDING 之外的遗留本地增删，
-      // 保证多端真正同步（例如昨天在电脑端新增/删除、但当时因 RLS 写失败而只留在本机的记录）。
-      // upsert 按 id 幂等，不会误删云端其它设备的行。
       try {
-        const cur = dataRef.current
         for (const t of TABLES) {
-          const rows = (cur[t] || []).filter((r) => isUuid(r.id)).map((r) => pickCols(t, { ...r, user_id: wsId }))
+          const rows = (merged[t] || []).filter((r) => isUuid(r.id)).map((r) => pickCols(t, { ...r, user_id: wsId }))
           if (rows.length) await supabase.from(t).upsert(rows)
         }
       } catch { /* ignore */ }
+      // 二次合并：推完后云端已含对端刚推送的数据，再拉一次并合并，确保收敛
+      const cloud2 = {}
+      for (const t of TABLES) {
+        const { data: rows2, error } = await supabase.from(t).select('*').eq('user_id', wsId)
+        if (!error && rows2) cloud2[t] = rows2
+      }
+      merged = mergeData(merged, cloud2, deletes)
+      setData(merged)
+      try { localStorage.setItem(LS_DATA, JSON.stringify(merged)) } catch { /* ignore */ }
       setCloudReady(true)
-    })()
-    return () => { cancelled = true }
+    } catch { /* ignore */ } finally { syncingRef.current = false }
   }, [wsId])
+
+  // 挂载即同步一次
+  useEffect(() => {
+    if (!isSupabaseConfigured) { setCloudReady(false); return }
+    syncNow()
+  }, [syncNow])
 
   // ---------- 离线补发 ----------
   function readPending() {
@@ -162,11 +197,15 @@ export function DataProvider({ children }) {
     }
     localStorage.setItem(LS_DELETES, JSON.stringify(rest))
   }
+  // 后台轮询：每 20 秒重新同步一次，保证任意一端的变化在最多 20 秒内自动传播到另一端；
+  // 联网恢复时也立即同步。这样「两端数据完全同步」不依赖用户手动反复刷新。
   useEffect(() => {
-    const onOnline = () => { if (isSupabaseConfigured) { flushPending(wsId); flushDeletes(wsId) } }
+    if (!isSupabaseConfigured) return
+    const id = setInterval(() => { syncNow() }, 20000)
+    const onOnline = () => syncNow()
     window.addEventListener('online', onOnline)
-    return () => window.removeEventListener('online', onOnline)
-  }, [wsId])
+    return () => { clearInterval(id); window.removeEventListener('online', onOnline) }
+  }, [syncNow])
 
   // 始终保存最新 data 引用，供加载完成后「主动补推云端」使用
   useEffect(() => { dataRef.current = data }, [data])
@@ -225,11 +264,11 @@ export function DataProvider({ children }) {
     setData((prev) => {
       const rows = prev[table] || []
       const target = rows.find((r) => r.id === id)
-      const merged = { ...prev, [table]: rows.map((r) => (r.id === id ? { ...r, deleted: true } : r)) }
+      const merged = { ...prev, [table]: rows.map((r) => (r.id === id ? { ...r, deleted: true, updated_at: new Date().toISOString() } : r)) }
       if (table === 'resources' && target?.name) {
         merged.project_ideas = (prev.project_ideas || []).map((p) =>
           (p.required_skills || []).includes(target.name)
-            ? { ...p, required_skills: p.required_skills.filter((s) => s !== target.name) }
+            ? { ...p, required_skills: p.required_skills.filter((s) => s !== target.name), updated_at: new Date().toISOString() }
             : p
         )
         dirty.current.add('project_ideas')
@@ -237,7 +276,7 @@ export function DataProvider({ children }) {
       if (table === 'project_ideas' && target?.name) {
         merged.reviews = (prev.reviews || []).map((rv) =>
           (rv.linked_items || []).includes(target.name)
-            ? { ...rv, linked_items: rv.linked_items.filter((s) => s !== target.name) }
+            ? { ...rv, linked_items: rv.linked_items.filter((s) => s !== target.name), updated_at: new Date().toISOString() }
             : rv
         )
         dirty.current.add('reviews')
@@ -279,7 +318,7 @@ export function DataProvider({ children }) {
   }, [])
 
   return (
-    <DataCtx.Provider value={{ wsId, cloudReady, isSupabaseConfigured, data, upsert, remove, changeWorkspace, resetWorkspace, setReadOnlyMode, readOnly, canDelete: !readOnly, showToast, toast }}>
+    <DataCtx.Provider value={{ wsId, cloudReady, isSupabaseConfigured, data, upsert, remove, changeWorkspace, resetWorkspace, setReadOnlyMode, syncNow, readOnly, canDelete: !readOnly, showToast, toast }}>
       {children}
     </DataCtx.Provider>
   )

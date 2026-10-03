@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, CornerDownLeft } from 'lucide-react'
+import { Search, CornerDownLeft, RefreshCw, CloudOff } from 'lucide-react'
 import { useData } from '../lib/store'
 
 // 搜索范围定义：板块 → 字段
@@ -101,11 +101,35 @@ export function GlobalSearch({ autoFocusHint = true }) {
   )
 }
 
+function SyncStatus() {
+  const { cloudReady, isSupabaseConfigured, syncNow } = useData()
+  const [busy, setBusy] = useState(false)
+  const onSync = async () => {
+    setBusy(true)
+    try { await syncNow() } finally { setBusy(false) }
+  }
+  if (!isSupabaseConfigured) {
+    return <span className="text-xs text-ink-faint flex items-center gap-1"><CloudOff size={14} /> 仅本地</span>
+  }
+  return (
+    <button
+      onClick={onSync}
+      disabled={busy}
+      className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-card border border-gray-200 bg-white text-ink-soft active:scale-95 disabled:opacity-60 min-h-[36px]"
+      title="立即与云端同步"
+    >
+      <RefreshCw size={13} className={busy ? 'animate-spin' : ''} />
+      {busy ? '同步中' : cloudReady ? '已同步' : '同步'}
+    </button>
+  )
+}
+
 export function Header({ title }) {
   return (
     <header className="mb-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
+        <SyncStatus />
       </div>
     </header>
   )
