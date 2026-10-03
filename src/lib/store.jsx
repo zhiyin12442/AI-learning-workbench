@@ -19,11 +19,12 @@ const isUuid = (v) => typeof v === 'string' && UUID_RE.test(v)
 // 每张表在 Supabase 中真实存在的列。upsert 前只保留这些列，
 // 避免前端临时字段（如编辑态、UI 标记）被一起发出，导致整批写入 400 失败。
 const SCHEMA_COLS = {
-  concepts: ['id', 'user_id', 'group_name', 'name', 'description', 'tags', 'pinned', 'created_at', 'updated_at'],
-  study_logs: ['id', 'user_id', 'video_name', 'study_date', 'platform', 'topic', 'duration_minutes', 'note', 'skill_installed', 'created_at'],
-  resources: ['id', 'user_id', 'category', 'name', 'url', 'description', 'installed', 'created_at'],
-  project_ideas: ['id', 'user_id', 'name', 'status', 'goal', 'stack', 'required_skills', 'steps', 'reference_links', 'notes', 'archived', 'pinned', 'created_at', 'updated_at'],
-  reviews: ['id', 'user_id', 'title', 'body', 'source', 'linked_items', 'tags', 'mood', 'created_at', 'updated_at'],
+  concepts: ['id', 'user_id', 'group_name', 'name', 'description', 'tags', 'pinned', 'deleted', 'created_at', 'updated_at'],
+  study_logs: ['id', 'user_id', 'video_name', 'study_date', 'platform', 'topic', 'duration_minutes', 'note', 'skill_installed', 'deleted', 'created_at'],
+  resources: ['id', 'user_id', 'category', 'name', 'url', 'description', 'installed', 'deleted', 'created_at'],
+  project_ideas: ['id', 'user_id', 'name', 'status', 'goal', 'stack', 'required_skills', 'steps', 'reference_links', 'notes', 'archived', 'pinned', 'deleted', 'created_at', 'updated_at'],
+  reviews: ['id', 'user_id', 'title', 'body', 'source', 'linked_items', 'tags', 'mood', 'deleted', 'created_at', 'updated_at'],
+  todos: ['id', 'user_id', 'title', 'note', 'done', 'due_date', 'priority', 'deleted', 'created_at', 'updated_at'],
 }
 const pickCols = (t, r) => {
   const cols = SCHEMA_COLS[t]
@@ -105,7 +106,13 @@ export function DataProvider({ children }) {
         for (const t of TABLES) {
           const cloudRows = (cloud[t] || []).filter((r) => isUuid(r.id) && !deletes.has(r.id))
           const localIds = new Set(base[t].map((r) => r.id))
-          const additions = cloudRows.filter((r) => !localIds.has(r.id))
+          // 把云端的「已删除」标记合并回本地：软删除跨设备生效，彻底杜绝删除后复活
+          for (const cr of cloudRows) {
+            if (cr.deleted && localIds.has(cr.id)) {
+              base[t] = base[t].map((r) => (r.id === cr.id ? { ...r, deleted: true } : r))
+            }
+          }
+          const additions = cloudRows.filter((r) => !r.deleted && !localIds.has(r.id))
           if (additions.length) base[t] = [...base[t], ...additions]
         }
         return base
@@ -207,7 +214,9 @@ export function DataProvider({ children }) {
     schedule()
   }, [schedule])
 
-  // ---------- 删除（真实后端删除 + 关联数据清理） ----------
+  // ---------- 删除（软删除：标记 deleted=true，由 upsert 同步到各端） ----------
+  // 采用软删除而非硬删云端行：硬删会导致「其它端刷新时把已删记录又加回来（复活）」。
+  // 软删除的 tombstone 随正常 upsert 路径传播，云端与所有端最终一致。
   const remove = useCallback(async (table, id) => {
     // 权限门：只读模式下任何删除都被拦截
     if (readOnly) return
@@ -216,7 +225,7 @@ export function DataProvider({ children }) {
     setData((prev) => {
       const rows = prev[table] || []
       const target = rows.find((r) => r.id === id)
-      const merged = { ...prev, [table]: rows.filter((r) => r.id !== id) }
+      const merged = { ...prev, [table]: rows.map((r) => (r.id === id ? { ...r, deleted: true } : r)) }
       if (table === 'resources' && target?.name) {
         merged.project_ideas = (prev.project_ideas || []).map((p) =>
           (p.required_skills || []).includes(target.name)
@@ -237,16 +246,8 @@ export function DataProvider({ children }) {
     })
     dirty.current.add(table)
     schedule()
-
-    // 后端真实删除：按 id + 工作区隔离，避免误删其它工作区数据
-    if (!isSupabaseConfigured) return
-    const { error } = await supabase.from(table).delete().eq('id', id).eq('user_id', wsId)
-    if (error) {
-      // 删除失败（弱网/离线）则入队，待恢复后由 flushDeletes 补发
-      const pend = readDeletes()
-      pend.push({ table, id })
-      localStorage.setItem(LS_DELETES, JSON.stringify(pend))
-    }
+    // 软删除的 deleted=true 会通过 flush 的 upsert 同步到云端与其它端；
+    // 不再在此处硬删云端行，避免「其它端合并时把已删记录重新加回」。
   }, [schedule, wsId, readOnly])
 
   // 只读模式开关（权限控制：开启后禁止删除）
@@ -286,7 +287,7 @@ export function DataProvider({ children }) {
 
 // ---------- 统计工具（全部在前端计算） ----------
 export function computeStats(data) {
-  const logs = data.study_logs || []
+  const logs = (data.study_logs || []).filter((l) => !l.deleted)
   const dates = [...new Set(logs.map((l) => l.study_date))].sort()
   let streak = 0
   if (dates.length) {
@@ -307,7 +308,7 @@ export function computeStats(data) {
     totalVideos: logs.length,
     weekVideos: logs.filter((l) => inRange(l.study_date, weekAgo)).length,
     monthVideos: logs.filter((l) => inRange(l.study_date, monthStart)).length,
-    activeProjects: (data.project_ideas || []).filter((p) => !p.archived && p.status === '进行中').length,
-    doneConcepts: (data.concepts || []).length,
+    activeProjects: (data.project_ideas || []).filter((p) => !p.deleted && !p.archived && p.status === '进行中').length,
+    doneConcepts: (data.concepts || []).filter((c) => !c.deleted).length,
   }
 }

@@ -35,3 +35,27 @@ drop policy if exists "own_study_logs"    on study_logs;
 drop policy if exists "own_resources"     on resources;
 drop policy if exists "own_project_ideas" on project_ideas;
 drop policy if exists "own_reviews"        on reviews;
+
+-- 4) 为 5 张表增加 deleted 列（软删除标记，用于跨设备同步「删除」状态，杜绝删除后复活）
+--    remove() 不再硬删云端行，而是把 deleted=true 通过 upsert 同步到各端；
+--    云端没有该列时 pickCols 会自动剥离该字段（应用侧优雅降级，删除仅本机生效）。
+alter table concepts      add column if not exists deleted boolean default false;
+alter table study_logs   add column if not exists deleted boolean default false;
+alter table resources     add column if not exists deleted boolean default false;
+alter table project_ideas add column if not exists deleted boolean default false;
+alter table reviews       add column if not exists deleted boolean default false;
+
+-- 5) 新建「待办事项」表（user_id 不引用 auth.users，避免再次触发外键 409）
+create table if not exists todos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  title text not null,
+  note text,
+  done boolean default false,
+  due_date date,
+  priority text check (priority in ('高', '中', '低')) default '中',
+  deleted boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table todos disable row level security;

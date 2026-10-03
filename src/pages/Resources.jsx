@@ -23,6 +23,7 @@ export default function Resources() {
   const isSkill = tab === 'skill'
 
   const rows = (data.resources || [])
+    .filter((r) => !r.deleted)
     .filter((r) => r.category === tab)
     .filter((r) => !onlyUninstalled || (tab === 'skill' && !r.installed))
     .filter((r) => !kw.trim() || (r.name + ' ' + (r.description || '') + ' ' + (r.url || '')).toLowerCase().includes(kw.trim().toLowerCase()))

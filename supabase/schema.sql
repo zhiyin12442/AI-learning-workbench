@@ -10,6 +10,7 @@ create table if not exists concepts (
   description text,
   tags text[] default '{}',
   pinned boolean default false,
+  deleted boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -25,6 +26,7 @@ create table if not exists study_logs (
   duration_minutes int,
   note text,
   skill_installed boolean default false,
+  deleted boolean default false,
   created_at timestamptz default now()
 );
 
@@ -37,6 +39,7 @@ create table if not exists resources (
   url text,
   description text,
   installed boolean default false,
+  deleted boolean default false,
   created_at timestamptz default now()
 );
 
@@ -54,6 +57,7 @@ create table if not exists project_ideas (
   notes text,
   archived boolean default false,
   pinned boolean default false,
+  deleted boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -68,6 +72,21 @@ create table if not exists reviews (
   linked_items text[] default '{}',
   tags text[] default '{}',
   mood text,
+  deleted boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 待办事项
+create table if not exists todos (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  title text not null,
+  note text,
+  done boolean default false,
+  due_date date,
+  priority text check (priority in ('高', '中', '低')) default '中',
+  deleted boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -88,6 +107,7 @@ alter table study_logs disable row level security;
 alter table resources disable row level security;
 alter table project_ideas disable row level security;
 alter table reviews disable row level security;
+alter table todos disable row level security;
 
 drop policy if exists "own_concepts" on concepts;
 drop policy if exists "own_study_logs" on study_logs;

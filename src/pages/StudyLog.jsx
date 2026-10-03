@@ -10,7 +10,7 @@ const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
 export default function StudyLog() {
   const { data, upsert, remove, canDelete, showToast } = useData()
-  const logs = data.study_logs || []
+  const logs = (data.study_logs || []).filter((l) => !l.deleted)
   const stats = computeStats(data)
   const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   const [selDay, setSelDay] = useState(null)

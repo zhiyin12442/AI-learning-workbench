@@ -12,7 +12,7 @@ const SOURCES = ['自己', '他人']
 
 export default function Reviews() {
   const { data, remove, canDelete, showToast } = useData()
-  const list = [...(data.reviews || [])].sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  const list = [...(data.reviews || [])].filter((r) => !r.deleted).sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
   const [confirm, setConfirm] = useState(null) // { id, title }
   const [detail, setDetail] = useState(null) // 点击卡片弹出的完整详情卡片
 

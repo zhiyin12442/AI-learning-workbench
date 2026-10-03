@@ -88,4 +88,9 @@ export const SEED = {
     { id: '7c19d74a-8996-513c-a161-7d6118e0f502', title: '看视频学习的效率陷阱', body: '只看不练等于没学。以后每条学习记录强制关联一个动手产出：一段代码、一篇笔记或一个 demo。', source: '自己', linked_items: ['学习记录'], tags: ['学习方法'], mood: '有触动', created_at: d(-11), updated_at: d(-11) },
     { id: '3d3a8b4d-c44d-54c3-87f4-52634d401c72', title: '同事分享的 RLS 踩坑记录', body: 'RLS 策略只写 using 不写 with check 时，insert 会被默认策略拦截。所有 for all 策略建议两个子句都显式声明。', source: '他人', linked_items: ['AI 学习工作台'], tags: ['Supabase', '安全'], mood: '实用', created_at: d(-16), updated_at: d(-16) },
   ],
+  todos: [
+    { id: 'a0000001-0000-4000-8000-000000000001', title: '整理 Supabase 同步脚本', note: '在 SQL Editor 跑 fix-sync.sql，关闭外键与 RLS', due_date: '2026-10-10', priority: '高', done: false, created_at: d(0) },
+    { id: 'a0000002-0000-4000-8000-000000000002', title: '补看《React Server Components》', note: '配合项目灵感里的 RSC 笔记', due_date: '2026-10-08', priority: '中', done: false, created_at: d(-1) },
+    { id: 'a0000003-0000-4000-8000-000000000003', title: '复盘本周学习闭环', note: '概念 → 视频 → 资源 → 项目 → 复盘 是否跑通', due_date: null, priority: '低', done: true, created_at: d(-2) },
+  ],
 }

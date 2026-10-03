@@ -10,6 +10,7 @@ import Resources from './pages/Resources'
 import ProjectIdeas from './pages/ProjectIdeas'
 import ProjectIdeaDetail from './pages/ProjectIdeaDetail'
 import Reviews, { ReviewEditor } from './pages/Reviews'
+import Todos from './pages/Todos'
 
 function Shell() {
   const [mobileNav, setMobileNav] = useState(false)
@@ -41,6 +42,7 @@ function Shell() {
             <Route path="/projects" element={<ProjectIdeas />} />
             <Route path="/projects/:id" element={<ProjectIdeaDetail />} />
             <Route path="/reviews" element={<Reviews />} />
+            <Route path="/todos" element={<Todos />} />
             <Route path="/reviews/new" element={<ReviewEditor />} />
             <Route path="/reviews/:id/edit" element={<ReviewEditor />} />
             <Route path="*" element={<Navigate to="/" replace />} />

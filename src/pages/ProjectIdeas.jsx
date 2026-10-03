@@ -23,9 +23,9 @@ export default function ProjectIdeas() {
   const [detail, setDetail] = useState(null) // 点击某条项目弹出的详情卡片
   const [confirm, setConfirm] = useState(null) // { id, name }
 
-  const all = data.project_ideas || []
+  const all = (data.project_ideas || []).filter((p) => !p.deleted)
   const list = all
-    .filter((p) => p.archived === showArchived)
+    .filter((p) => Boolean(p.archived) === showArchived)
     .filter((p) => filter === '全部' || p.status === filter)
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || (a.updated_at < b.updated_at ? 1 : -1))
 
@@ -53,7 +53,7 @@ export default function ProjectIdeas() {
     e.preventDefault()
     const fd = new FormData(e.target)
     const name = fd.get('name')
-    upsert('project_ideas', { name, status: '未开始', goal: fd.get('goal'), stack: (fd.get('stack') || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean) })
+    upsert('project_ideas', { name, status: '未开始', goal: fd.get('goal'), archived: false, stack: (fd.get('stack') || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean) })
     setAdding(false)
     showToast(`项目「${name}」已创建，万事开头难，你已经开始啦。`)
   }

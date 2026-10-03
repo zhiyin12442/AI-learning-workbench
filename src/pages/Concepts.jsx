@@ -8,7 +8,7 @@ const ACCENTS = ['#286ED3', '#4D3EB4', '#84CC16', '#F59E0B', '#EF4444', '#38BDF8
 
 export default function Concepts() {
   const { data, upsert, remove, canDelete, showToast } = useData()
-  const concepts = data.concepts || []
+  const concepts = (data.concepts || []).filter((c) => !c.deleted)
   const [kw, setKw] = useState('')
   const [openGroups, setOpenGroups] = useState(null) // null=全部展开
   const [collapsed, setCollapsed] = useState({})
@@ -155,14 +155,14 @@ export default function Concepts() {
                             <div id={'item-' + c.id} className={'flex items-start gap-4 py-3.5 px-5 border-b border-line last:border-0 cursor-pointer ' + (hlId === c.id ? 'bg-yellow-100' : '')}>
                               <div className="w-[200px] shrink-0 font-medium text-gray-800 truncate"><Highlight text={c.name} kw={kw} /></div>
                               <div className="flex-1 min-w-0 text-ink-soft">
-                                <p className={open ? '' : 'line-clamp-1'}>
+                                <p className={open ? '' : 'line-clamp-3'}>
                                   <Highlight text={c.description || '（暂无释义）'} kw={kw} />
                                 </p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {(c.tags || []).map((t) => <Highlight key={t} text={'#' + t} kw={kw} />).map((el, i) => (
                                     <span key={i} className="rounded-full px-2.5 py-0.5 text-xs bg-gray-100 text-ink-soft">{el}</span>
                                   ))}
-                                  {c.description && c.description.length > 40 && (
+                                  {c.description && c.description.length > 60 && (
                                     <button onClick={(e) => { e.stopPropagation(); setExpanded({ ...expanded, [c.id]: !open }) }} className="text-xs text-primary ml-1 min-h-[36px] px-2">
                                       {open ? '收起' : '展开全文'}
                                     </button>

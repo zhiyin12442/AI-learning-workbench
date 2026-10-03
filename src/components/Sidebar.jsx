@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import {
   LayoutGrid, BookOpen, NotebookPen, FolderKanban, Lightbulb,
-  History, Cloud, CloudOff, KeyRound, X,
+  History, CheckSquare, Cloud, CloudOff, KeyRound, X,
 } from 'lucide-react'
 import { useData } from '../lib/store'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -159,6 +159,7 @@ export default function Sidebar({ mobile = false, onNavigate }) {
         <NavLink to="/studylog" className={itemCls} onClick={onNavigate}><NotebookPen size={17} /> 学习记录</NavLink>
         <NavLink to="/resources" className={itemCls} onClick={onNavigate}><FolderKanban size={17} /> 项目搜集</NavLink>
         <NavLink to="/projects" className={itemCls} onClick={onNavigate}><Lightbulb size={17} /> 项目灵感</NavLink>
+        <NavLink to="/todos" className={itemCls} onClick={onNavigate}><CheckSquare size={17} /> 待办事项</NavLink>
         <NavLink to="/reviews" className={itemCls} onClick={onNavigate}><History size={17} /> 经验复盘</NavLink>
       </nav>
 
@@ -176,6 +177,7 @@ export function MobileTabBar() {
     { to: '/concepts', icon: BookOpen, label: '概念' },
     { to: '/studylog', icon: NotebookPen, label: '记录' },
     { to: '/projects', icon: Lightbulb, label: '灵感' },
+    { to: '/todos', icon: CheckSquare, label: '待办' },
     { to: '/reviews', icon: History, label: '复盘' },
   ]
   return (
