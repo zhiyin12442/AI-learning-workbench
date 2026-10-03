@@ -34,12 +34,15 @@ const pickCols = (t, r) => {
   return out
 }
 
-// ---------- 双向合并（last-write-wins，按 updated_at） ----------
-// 目的：让任意两台设备加载云端后「收敛」到完全一致的数据，杜绝：
-//  - 删除复活：云端 deleted=true 的行会同步回本地并回推云端；
-//  - 新增消失：云端存在而本地没有的行会被并入本地；
-//  - 内容不一致：同一行被某端改过，按 updated_at 取较新版本（双方最终一致）。
-// 合并结果随后会被整体回推云端（upsert 按 id 幂等，不会误删其它端行）。
+// ---------- 双向合并（删除权威 + last-write-wins 内容） ----------
+// 目的：让任意两台设备加载云端后「收敛」到完全一致的数据，并保证：
+//  - 【删除权威 / 单调】一旦本地或云端任一侧把某行标记为 deleted=true，
+//    合并结果一定是 deleted=true，且会回推云端——删除永远不可逆、不复活。
+//    这是上一版「删除复活」的真正根因：旧逻辑用 updated_at 比较，
+//    云端一条带旧时间戳的 deleted=false 会盖过删除标记。
+//  - 新增不消失：云端有、本地没有且未删除的行，并入本地。
+//  - 内容一致：双方均存活时，按 updated_at 取较新版本（最终一致）。
+// 合并结果随后整体回推云端（upsert 按 id 幂等），tombstone 一并传播。
 function mergeData(local, cloud, deletes) {
   const out = {}
   const tOf = (r) => (r && r.updated_at ? Date.parse(r.updated_at) || 0 : 0)
@@ -51,20 +54,16 @@ function mergeData(local, cloud, deletes) {
     for (const r of C) {
       const ex = map.get(r.id)
       if (!ex) {
-        // 云端有、本地没有：未删除则并入；已删除则不重新引入
+        // 云端有、本地没有：未删除才并入；已删除则不重新引入（保持删除）
         if (!r.deleted) map.set(r.id, { ...r })
-      }       else if (r.deleted) {
-        // 云端标记删除 → 直接采用云端整行（删除权威，杜绝复活；并保持一致的时间戳）
+      } else if (r.deleted) {
+        // 云端标记删除 → 删除权威：直接采用云端整行（deleted=true），彻底杜绝复活
         map.set(r.id, { ...r })
       } else if (ex.deleted) {
-        // 本地已删、云端存活：本地删除较新（或同时）则以删除为准并回推；否则云端较新 → 复活
-        if (tOf(ex) >= tOf(r)) {
-          map.set(r.id, { ...ex, deleted: true })
-        } else {
-          map.set(r.id, { ...r })
-        }
+        // 本地已删、云端存活 → 删除权威：保持本地删除并回推（不会被云端旧版本复活）
+        map.set(r.id, { ...ex, deleted: true })
       } else {
-        // 双方均存活：取 updated_at 较新者
+        // 双方均存活：取 updated_at 较新者（内容最终一致）
         if (tOf(r) >= tOf(ex)) map.set(r.id, { ...r })
       }
     }
@@ -123,6 +122,13 @@ export function DataProvider({ children }) {
   const timer = useRef(null)
   const pendingRef = useRef([])
   const dataRef = useRef(data)
+  // 同步提交：同时更新 state 与 dataRef.current。
+  // 关键：dataRef 必须「同步」更新，否则 20s 轮询在 setData 异步生效前读到旧数据，
+  // 会把刚删除/修改的记录覆盖回旧值（上一版「删除复活」的根因之一）。
+  const commit = useCallback((next) => {
+    dataRef.current = next
+    setData(next)
+  }, [])
 
   // ---------- 重新同步（双向合并 + 回推 + 二次合并） ----------
   // 这是「多端最终一致」的核心：任何时刻触发 syncNow，都会把本地∪云端按
@@ -157,7 +163,7 @@ export function DataProvider({ children }) {
         if (!error && rows2) cloud2[t] = rows2
       }
       merged = mergeData(merged, cloud2, deletes)
-      setData(merged)
+      commit(merged)
       try { localStorage.setItem(LS_DATA, JSON.stringify(merged)) } catch { /* ignore */ }
       setCloudReady(true)
     } catch { /* ignore */ } finally { syncingRef.current = false }
@@ -212,13 +218,14 @@ export function DataProvider({ children }) {
 
   // ---------- 持久化（防抖 1.5s） ----------
   const flush = useCallback(async (tables) => {
+    const cur = dataRef.current
     // 始终写入本地缓存，保证离线/无网络也不丢（本地为权威副本）
-    localStorage.setItem(LS_DATA, JSON.stringify(data))
+    localStorage.setItem(LS_DATA, JSON.stringify(cur))
     if (!isSupabaseConfigured) return
     for (const t of tables) {
       // 仅同步主键为合法 uuid 的行：种子演示行使用固定 id，不影响云端；
       // 过滤掉非 uuid 行可避免整表 upsert 因单行类型错误而 400 失败。
-      const rows = (data[t] || [])
+      const rows = (cur[t] || [])
         .filter((r) => isUuid(r.id))
         .map((r) => pickCols(t, { ...r, user_id: wsId }))
       if (!rows.length) continue
@@ -229,7 +236,7 @@ export function DataProvider({ children }) {
         localStorage.setItem(LS_PENDING, JSON.stringify(pend))
       }
     }
-  }, [data, wsId])
+  }, [wsId])
 
   const schedule = useCallback(() => {
     clearTimeout(timer.current)
@@ -238,20 +245,19 @@ export function DataProvider({ children }) {
 
   // ---------- CRUD ----------
   const upsert = useCallback((table, row) => {
-    setData((prev) => {
-      const rows = prev[table] || []
-      const now = new Date().toISOString()
-      let next
-      if (row.id && rows.some((r) => r.id === row.id)) {
-        next = rows.map((r) => (r.id === row.id ? { ...r, ...row, updated_at: now } : r))
-      } else {
-        next = [{ ...row, id: row.id || uid(), created_at: row.created_at || now }, ...rows]
-      }
-      return { ...prev, [table]: next }
-    })
+    const prev = dataRef.current
+    const rows = prev[table] || []
+    const now = new Date().toISOString()
+    let next
+    if (row.id && rows.some((r) => r.id === row.id)) {
+      next = rows.map((r) => (r.id === row.id ? { ...r, ...row, updated_at: now } : r))
+    } else {
+      next = [{ ...row, id: row.id || uid(), created_at: row.created_at || now }, ...rows]
+    }
+    commit({ ...prev, [table]: next })
     dirty.current.add(table)
     schedule()
-  }, [schedule])
+  }, [schedule, commit])
 
   // ---------- 删除（软删除：标记 deleted=true，由 upsert 同步到各端） ----------
   // 采用软删除而非硬删云端行：硬删会导致「其它端刷新时把已删记录又加回来（复活）」。
@@ -261,33 +267,41 @@ export function DataProvider({ children }) {
     if (readOnly) return
 
     // 关联数据清理（关联以数组/文本内嵌、并非数据库外键，故在应用层联级处理）
-    setData((prev) => {
-      const rows = prev[table] || []
-      const target = rows.find((r) => r.id === id)
-      const merged = { ...prev, [table]: rows.map((r) => (r.id === id ? { ...r, deleted: true, updated_at: new Date().toISOString() } : r)) }
-      if (table === 'resources' && target?.name) {
-        merged.project_ideas = (prev.project_ideas || []).map((p) =>
+    const prev = dataRef.current
+    const rows = prev[table] || []
+    const target = rows.find((r) => r.id === id)
+    const now = new Date().toISOString()
+    let next = { ...prev, [table]: rows.map((r) => (r.id === id ? { ...r, deleted: true, updated_at: now } : r)) }
+    if (table === 'resources' && target?.name) {
+      next = {
+        ...next,
+        project_ideas: (prev.project_ideas || []).map((p) =>
           (p.required_skills || []).includes(target.name)
-            ? { ...p, required_skills: p.required_skills.filter((s) => s !== target.name), updated_at: new Date().toISOString() }
+            ? { ...p, required_skills: p.required_skills.filter((s) => s !== target.name), updated_at: now }
             : p
-        )
-        dirty.current.add('project_ideas')
+        ),
       }
-      if (table === 'project_ideas' && target?.name) {
-        merged.reviews = (prev.reviews || []).map((rv) =>
+      dirty.current.add('project_ideas')
+    }
+    if (table === 'project_ideas' && target?.name) {
+      next = {
+        ...next,
+        reviews: (prev.reviews || []).map((rv) =>
           (rv.linked_items || []).includes(target.name)
-            ? { ...rv, linked_items: rv.linked_items.filter((s) => s !== target.name), updated_at: new Date().toISOString() }
+            ? { ...rv, linked_items: rv.linked_items.filter((s) => s !== target.name), updated_at: now }
             : rv
-        )
-        dirty.current.add('reviews')
+        ),
       }
-      return merged
-    })
+      dirty.current.add('reviews')
+    }
+    // commit 同步更新 dataRef，保证随后触发的 20s 轮询读到的是「已删除」状态，
+    // 不会再把它当旧数据覆盖回云端造成复活。
+    commit(next)
     dirty.current.add(table)
     schedule()
     // 软删除的 deleted=true 会通过 flush 的 upsert 同步到云端与其它端；
     // 不再在此处硬删云端行，避免「其它端合并时把已删记录重新加回」。
-  }, [schedule, wsId, readOnly])
+  }, [schedule, commit, readOnly])
 
   // 只读模式开关（权限控制：开启后禁止删除）
   const setReadOnlyMode = useCallback((v) => {
