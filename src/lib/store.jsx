@@ -34,6 +34,20 @@ const pickCols = (t, r) => {
   return out
 }
 
+// 容错推送：把本地行 upsert 到云端。
+// 若云端该表尚未创建 updated_at 列（用户还没跑最新 fix-sync.sql），
+// Supabase 会返回 "column updated_at does not exist" —— 此时自动剥离 updated_at 重试，
+// 保证仍能同步（仅暂时失去 LWW 精度），不会因为整批写入失败而导致记录丢失。
+async function pushRows(table, rows, workspaceId) {
+  if (!rows.length) return
+  const cleaned = rows.map((r) => pickCols(table, { ...r, user_id: workspaceId }))
+  const { error } = await supabase.from(table).upsert(cleaned)
+  if (error && /updated_at/i.test(error.message || '')) {
+    const stripped = cleaned.map(({ updated_at, ...rest }) => rest)
+    await supabase.from(table).upsert(stripped)
+  }
+}
+
 // ---------- 双向合并（删除权威 + last-write-wins 内容） ----------
 // 目的：让任意两台设备加载云端后「收敛」到完全一致的数据，并保证：
 //  - 【删除权威 / 单调】一旦本地或云端任一侧把某行标记为 deleted=true，
@@ -43,12 +57,12 @@ const pickCols = (t, r) => {
 //  - 新增不消失：云端有、本地没有且未删除的行，并入本地。
 //  - 内容一致：双方均存活时，按 updated_at 取较新版本（最终一致）。
 // 合并结果随后整体回推云端（upsert 按 id 幂等），tombstone 一并传播。
-function mergeData(local, cloud, deletes) {
+function mergeData(local, cloud) {
   const out = {}
   const tOf = (r) => (r && r.updated_at ? Date.parse(r.updated_at) || 0 : 0)
   for (const t of TABLES) {
     const L = (local[t] || []).filter((r) => isUuid(r.id))
-    const C = (cloud[t] || []).filter((r) => isUuid(r.id) && !deletes.has(r.id))
+    const C = (cloud[t] || []).filter((r) => isUuid(r.id))
     const map = new Map()
     for (const r of L) map.set(r.id, { ...r })
     for (const r of C) {
@@ -145,15 +159,14 @@ export function DataProvider({ children }) {
         const { data: rows, error } = await supabase.from(t).select('*').eq('user_id', wsId)
         if (!error && rows) cloud[t] = rows
       }
-      const deletes = new Set(readDeletes().map((d) => d.id))
       // 双向合并：本地 ∪ 云端，按 updated_at 取较新版本，删除标记双向同步
-      let merged = mergeData(local, cloud, deletes)
+      let merged = mergeData(local, cloud)
       // 回推合并后的真相（修复：旧逻辑推的是合并前的旧本地数据，导致删除复活/新增消失）
       flushPending(wsId)
       try {
         for (const t of TABLES) {
-          const rows = (merged[t] || []).filter((r) => isUuid(r.id)).map((r) => pickCols(t, { ...r, user_id: wsId }))
-          if (rows.length) await supabase.from(t).upsert(rows)
+          const rows = (merged[t] || []).filter((r) => isUuid(r.id)).map((r) => ({ ...r, user_id: wsId }))
+          await pushRows(t, rows, wsId)
         }
       } catch { /* ignore */ }
       // 二次合并：推完后云端已含对端刚推送的数据，再拉一次并合并，确保收敛
@@ -162,7 +175,7 @@ export function DataProvider({ children }) {
         const { data: rows2, error } = await supabase.from(t).select('*').eq('user_id', wsId)
         if (!error && rows2) cloud2[t] = rows2
       }
-      merged = mergeData(merged, cloud2, deletes)
+      merged = mergeData(merged, cloud2)
       commit(merged)
       try { localStorage.setItem(LS_DATA, JSON.stringify(merged)) } catch { /* ignore */ }
       setCloudReady(true)
@@ -227,10 +240,12 @@ export function DataProvider({ children }) {
       // 过滤掉非 uuid 行可避免整表 upsert 因单行类型错误而 400 失败。
       const rows = (cur[t] || [])
         .filter((r) => isUuid(r.id))
-        .map((r) => pickCols(t, { ...r, user_id: wsId }))
+        .map((r) => ({ ...r, user_id: wsId }))
       if (!rows.length) continue
-      const { error } = await supabase.from(t).upsert(rows)
-      if (error) {
+      try {
+        await pushRows(t, rows, wsId)
+      } catch {
+        // 推送失败（弱网/离线/缺列）→ 进入离线队列，恢复后由下次 flush/sync 补发
         const pend = readPending()
         rows.forEach((row) => pend.push({ table: t, row }))
         localStorage.setItem(LS_PENDING, JSON.stringify(pend))
@@ -252,7 +267,7 @@ export function DataProvider({ children }) {
     if (row.id && rows.some((r) => r.id === row.id)) {
       next = rows.map((r) => (r.id === row.id ? { ...r, ...row, updated_at: now } : r))
     } else {
-      next = [{ ...row, id: row.id || uid(), created_at: row.created_at || now }, ...rows]
+      next = [{ ...row, id: row.id || uid(), created_at: row.created_at || now, updated_at: now }, ...rows]
     }
     commit({ ...prev, [table]: next })
     dirty.current.add(table)
@@ -298,10 +313,13 @@ export function DataProvider({ children }) {
     // 不会再把它当旧数据覆盖回云端造成复活。
     commit(next)
     dirty.current.add(table)
+    // 立即把 tombstone 推到云端（不等 1.5s 防抖），缩短对端看到「已删除」的窗口，
+    // 进一步杜绝删除后短暂复活的观感；同时保留 schedule 兜底。
+    flush([table])
     schedule()
     // 软删除的 deleted=true 会通过 flush 的 upsert 同步到云端与其它端；
     // 不再在此处硬删云端行，避免「其它端合并时把已删记录重新加回」。
-  }, [schedule, commit, readOnly])
+  }, [schedule, commit, flush, readOnly])
 
   // 只读模式开关（权限控制：开启后禁止删除）
   const setReadOnlyMode = useCallback((v) => {

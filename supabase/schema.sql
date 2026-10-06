@@ -27,7 +27,8 @@ create table if not exists study_logs (
   note text,
   skill_installed boolean default false,
   deleted boolean default false,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 -- 项目搜集
@@ -40,7 +41,8 @@ create table if not exists resources (
   description text,
   installed boolean default false,
   deleted boolean default false,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 -- 项目灵感
@@ -115,20 +117,8 @@ drop policy if exists "own_resources" on resources;
 drop policy if exists "own_project_ideas" on project_ideas;
 drop policy if exists "own_reviews" on reviews;
 
--- updated_at 自动更新
-create or replace function set_updated_at() returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
-
-drop trigger if exists trg_concepts_updated on concepts;
-create trigger trg_concepts_updated before update on concepts for each row execute function set_updated_at();
-drop trigger if exists trg_project_ideas_updated on project_ideas;
-create trigger trg_project_ideas_updated before update on project_ideas for each row execute function set_updated_at();
-drop trigger if exists trg_reviews_updated on reviews;
-create trigger trg_reviews_updated before update on reviews for each row execute function set_updated_at();
+-- 注意：不再使用服务端 set_updated_at 触发器。updated_at 由客户端写入的时间戳为准，
+-- 以保证「按时间取最新」合并（last-write-wins）在跨设备时正确收敛。
 
 -- ===== 删除权限（服务端强制，可选） =====
 -- 当前为「免登录共享工作区」模式：RLS 已关闭、匿名 key 可读写，

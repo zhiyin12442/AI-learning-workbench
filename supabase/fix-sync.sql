@@ -59,3 +59,17 @@ create table if not exists todos (
   updated_at timestamptz default now()
 );
 alter table todos disable row level security;
+
+-- 6) 为 study_logs / resources 补 updated_at 列（其余 4 张表已有）。
+--    updated_at 是「按时间取最新」合并的基准；缺列会导致这两张表的新增/修改
+--    在同步时被对方旧版本覆盖（表现为「新增记录消失 / 编辑丢失」）。
+alter table study_logs add column if not exists updated_at timestamptz default now();
+alter table resources    add column if not exists updated_at timestamptz default now();
+
+-- 7) 删除服务端 set_updated_at 触发器：让 updated_at 由客户端写入的时间戳为准，
+--    避免服务端在每次 UPDATE 时把它改写成服务器时间，从而让「本机刚改的版本」被
+--    合并逻辑误判为「更旧」而覆盖掉（这是「新增/编辑记录消失、删除间歇性复活」的隐患）。
+drop trigger if exists trg_concepts_updated on concepts;
+drop trigger if exists trg_project_ideas_updated on project_ideas;
+drop trigger if exists trg_reviews_updated on reviews;
+drop function if exists set_updated_at();

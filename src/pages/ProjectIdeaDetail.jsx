@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2, ExternalLink, Pin } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, ExternalLink, Pin, Pencil } from 'lucide-react'
 import { useData } from '../lib/store'
-import { EmptyState, StatusPill, ConfirmDialog } from '../components/ui'
+import { EmptyState, StatusPill, ConfirmDialog, Modal, Field } from '../components/ui'
 import { format } from 'date-fns'
 
 export default function ProjectIdeaDetail() {
@@ -10,6 +10,15 @@ export default function ProjectIdeaDetail() {
   const nav = useNavigate()
   const { data, upsert, remove, canDelete, showToast } = useData()
   const project = (data.project_ideas || []).find((p) => p.id === id)
+
+  const [newStep, setNewStep] = useState('')
+  const [confirm, setConfirm] = useState(null)
+  const [confirmStep, setConfirmStep] = useState(null)
+  // 详情查看弹窗：'skills' | 'refs' | 'notes' | null（点击卡片弹出完整内容）
+  const [view, setView] = useState(null)
+  // 编辑弹窗：'skills' | 'refs' | 'notes' | null
+  const [editing, setEditing] = useState(null)
+  const [draft, setDraft] = useState('')
 
   if (!project) {
     return (
@@ -23,11 +32,6 @@ export default function ProjectIdeaDetail() {
   const steps = project.steps || []
   const done = steps.filter((s) => s.done).length
   const pct = steps.length ? Math.round((done / steps.length) * 100) : 0
-  const [newStep, setNewStep] = useState('')
-  const [notes, setNotes] = useState(project.notes || '')
-  const [confirm, setConfirm] = useState(null) // 删除整个项目
-  const [confirmStep, setConfirmStep] = useState(null) // 删除某一步骤的索引
-
   const setProject = (patch) => upsert('project_ideas', { ...project, ...patch })
 
   const addStep = () => {
@@ -35,11 +39,37 @@ export default function ProjectIdeaDetail() {
     setProject({ steps: [...steps, { text: newStep.trim(), done: false }] })
     setNewStep('')
   }
-
   const complete = () => {
     setProject({ status: '已完成' })
     showToast(`🎉 项目「${project.name}」已完成，要不要写一条复盘沉淀经验？`, 4200)
   }
+
+  // 打开编辑弹窗：把当前内容预填进草稿
+  const openEdit = (field) => {
+    if (field === 'skills') setDraft((project.required_skills || []).join('\n'))
+    else if (field === 'refs') setDraft((project.reference_links || []).join('\n'))
+    else setDraft(project.notes || '')
+    setEditing(field)
+  }
+  // 打开查看弹窗；笔记类需把草稿预填为当前内容，避免「未改即保存」清空
+  const openView = (field) => {
+    if (field === 'notes') setDraft(project.notes || '')
+    setView(field)
+  }
+  const saveEdit = () => {
+    if (editing === 'skills') {
+      setProject({ required_skills: draft.split(/[\n,，]/).map((s) => s.trim()).filter(Boolean) })
+    } else if (editing === 'refs') {
+      setProject({ reference_links: draft.split(/\n/).map((s) => s.trim()).filter(Boolean) })
+    } else {
+      setProject({ notes: draft })
+    }
+    setEditing(null)
+    showToast('已保存修改。')
+  }
+
+  const skills = project.required_skills || []
+  const refs = project.reference_links || []
 
   return (
     <div>
@@ -116,51 +146,124 @@ export default function ProjectIdeaDetail() {
         </div>
 
         <div className="space-y-5">
-          {/* 所需 Skills */}
-          <div className="card p-6">
-            <p className="text-sm font-semibold text-gray-800 mb-3">所需 Skills</p>
-            {(project.required_skills || []).length === 0 ? (
-              <p className="text-sm text-ink-faint">暂无，可在项目搜集板块中关联。</p>
+          {/* 所需 Skills：可点击查看完整 / 可编辑 */}
+          <div
+            className="card p-6 cursor-pointer hover:shadow-card-shadow transition-shadow"
+            onClick={() => setView('skills')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-gray-800">所需 Skills</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); openEdit('skills') }}
+                  className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-primary px-2 py-1 rounded-[8px] hover:bg-gray-50 min-h-[36px]"
+                ><Pencil size={13} /> 编辑</button>
+              </div>
+            </div>
+            {skills.length === 0 ? (
+              <p className="text-sm text-ink-faint">暂无，可在项目搜集板块中关联。点击查看或编辑。</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {project.required_skills.map((s) => <span key={s} className="rounded-full px-3 py-1 text-xs bg-accent/10 text-accent">{s}</span>)}
+                {skills.map((s) => <span key={s} className="rounded-full px-3 py-1 text-xs bg-accent/10 text-accent">{s}</span>)}
               </div>
             )}
           </div>
 
-          {/* 参考资料 */}
-          <div className="card p-6">
-            <p className="text-sm font-semibold text-gray-800 mb-3">参考资料</p>
-            {(project.reference_links || []).length === 0 ? (
-              <p className="text-sm text-ink-faint">暂无参考链接。</p>
+          {/* 参考资料：可点击查看完整 / 可编辑 */}
+          <div
+            className="card p-6 cursor-pointer hover:shadow-card-shadow transition-shadow"
+            onClick={() => setView('refs')}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-gray-800">参考资料</p>
+              <button
+                onClick={(e) => { e.stopPropagation(); openEdit('refs') }}
+                className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-primary px-2 py-1 rounded-[8px] hover:bg-gray-50 min-h-[36px]"
+              ><Pencil size={13} /> 编辑</button>
+            </div>
+            {refs.length === 0 ? (
+              <p className="text-sm text-ink-faint">暂无参考链接。点击添加或编辑。</p>
             ) : (
               <ul className="space-y-2">
-                {project.reference_links.map((r) => (
-                  <li key={r}>
-                    <a href={r} target="_blank" rel="noreferrer" className="text-sm text-primary inline-flex items-center gap-1.5 hover:underline break-all">
+                {refs.map((r) => (
+                  <li key={r} className="truncate">
+                    <span className="text-sm text-primary inline-flex items-center gap-1.5 break-all">
                       <ExternalLink size={13} className="shrink-0" /> {r}
-                    </a>
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          {/* 进度备注 */}
-          <div className="card p-6">
+          {/* 进度备注：点击查看完整（弹窗内可编辑） */}
+          <div
+            className="card p-6 cursor-pointer hover:shadow-card-shadow transition-shadow"
+            onClick={() => openView('notes')}
+          >
             <p className="text-sm font-semibold text-gray-800 mb-3">进度备注</p>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              onBlur={() => notes !== (project.notes || '') && setProject({ notes })}
-              rows={4}
-              placeholder="记录当前进展、卡点和下一步..."
-              className="w-full"
-            />
-            <p className="text-xs text-ink-faint mt-2">失焦后自动保存</p>
+            {project.notes ? (
+              <p className="text-sm text-gray-700 whitespace-pre-wrap break-words line-clamp-3">{project.notes}</p>
+            ) : (
+              <p className="text-sm text-ink-faint">暂无备注。点击添加记录当前进展、卡点和下一步。</p>
+            )}
           </div>
         </div>
       </div>
+
+      {/* ===== 完整详情弹窗（点击卡片） ===== */}
+      <Modal title={view === 'skills' ? '所需 Skills（完整）' : view === 'refs' ? '参考资料（完整）' : '进度备注（完整）'} onClose={() => setView(null)}>
+        {view === 'skills' && (
+          skills.length === 0 ? <p className="text-sm text-ink-faint">还没有添加任何 Skill。</p> :
+          <div className="flex flex-wrap gap-2">
+            {skills.map((s) => <span key={s} className="rounded-full px-3 py-1 text-sm bg-accent/10 text-accent">{s}</span>)}
+          </div>
+        )}
+        {view === 'refs' && (
+          refs.length === 0 ? <p className="text-sm text-ink-faint">还没有添加任何参考链接。</p> :
+          <ul className="space-y-3">
+            {refs.map((r) => (
+              <li key={r}>
+                <a href={r} target="_blank" rel="noreferrer" className="text-sm text-primary inline-flex items-center gap-1.5 hover:underline break-all">
+                  <ExternalLink size={14} className="shrink-0" /> {r}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {view === 'notes' && (
+          <div>
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={8}
+              placeholder="记录当前进展、卡点和下一步..."
+              className="w-full"
+            />
+            <div className="flex justify-end gap-2 mt-3">
+              <button onClick={() => setView(null)} className="btn-ghost min-h-[44px]">关闭</button>
+              <button onClick={() => { setProject({ notes: draft }); setView(null); showToast('已保存备注。') }} className="btn-primary min-h-[44px]">保存</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ===== 编辑弹窗（点击编辑按钮） ===== */}
+      <Modal title={editing === 'skills' ? '编辑所需 Skills' : editing === 'refs' ? '编辑参考资料' : '编辑进度备注'} onClose={() => setEditing(null)}>
+        {editing === 'notes' ? (
+          <Field label="进度备注">
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={8} placeholder="记录当前进展、卡点和下一步..." className="w-full" />
+          </Field>
+        ) : (
+          <Field label={editing === 'skills' ? '每行 / 逗号分隔一个 Skill' : '每行一个参考链接'}>
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={6} placeholder={editing === 'skills' ? 'React\nSupabase' : 'https://...'} className="w-full font-mono text-sm" />
+          </Field>
+        )}
+        <div className="flex justify-end gap-2">
+          <button onClick={() => setEditing(null)} className="btn-ghost min-h-[44px]">取消</button>
+          <button onClick={saveEdit} className="btn-primary min-h-[44px]">保存</button>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={!!confirm}
