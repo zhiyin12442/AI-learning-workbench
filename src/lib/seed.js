@@ -93,4 +93,9 @@ export const SEED = {
     { id: 'a0000002-0000-4000-8000-000000000002', title: '补看《React Server Components》', note: '配合项目灵感里的 RSC 笔记', due_date: '2026-10-08', priority: '中', done: false, created_at: d(-1) },
     { id: 'a0000003-0000-4000-8000-000000000003', title: '复盘本周学习闭环', note: '概念 → 视频 → 资源 → 项目 → 复盘 是否跑通', due_date: null, priority: '低', done: true, created_at: d(-2) },
   ],
+  habits: [
+    { id: 'b1000001-0000-4000-8000-000000000001', title: '阅读 30 分钟', note: '每天固定读技术或专业书', checkins: [d(0), d(-1), d(-2), d(-3), d(-4)], created_at: d(-4) },
+    { id: 'b1000002-0000-4000-8000-000000000002', title: '背 20 个单词', note: '英语词汇积累', checkins: [d(0), d(-1), d(-3)], created_at: d(-3) },
+    { id: 'b1000003-0000-4000-8000-000000000003', title: '写一条学习复盘', note: '沉淀当天最有价值的收获', checkins: [], created_at: d(0) },
+  ],
 }

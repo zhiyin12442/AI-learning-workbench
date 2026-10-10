@@ -25,6 +25,7 @@ const SCHEMA_COLS = {
   project_ideas: ['id', 'user_id', 'name', 'status', 'goal', 'stack', 'required_skills', 'steps', 'reference_links', 'notes', 'archived', 'pinned', 'deleted', 'created_at', 'updated_at'],
   reviews: ['id', 'user_id', 'title', 'body', 'source', 'linked_items', 'tags', 'mood', 'deleted', 'created_at', 'updated_at'],
   todos: ['id', 'user_id', 'title', 'note', 'done', 'due_date', 'priority', 'deleted', 'created_at', 'updated_at'],
+  habits: ['id', 'user_id', 'title', 'note', 'checkins', 'deleted', 'created_at', 'updated_at'],
 }
 const pickCols = (t, r) => {
   const cols = SCHEMA_COLS[t]
@@ -136,12 +137,15 @@ export function DataProvider({ children }) {
   const timer = useRef(null)
   const pendingRef = useRef([])
   const dataRef = useRef(data)
-  // 同步提交：同时更新 state 与 dataRef.current。
-  // 关键：dataRef 必须「同步」更新，否则 20s 轮询在 setData 异步生效前读到旧数据，
-  // 会把刚删除/修改的记录覆盖回旧值（上一版「删除复活」的根因之一）。
+  // 同步提交：同时更新 state、dataRef.current 与本地缓存（localStorage）。
+  //  - dataRef 必须「同步」更新，否则 20s 轮询在 setData 异步生效前读到旧数据，
+  //    会把刚删除/修改的记录覆盖回旧值（上一版「删除复活」的根因之一）。
+  //  - 每次提交都立即写入 localStorage：保证「刷新 / 切换页面 / 重新打开应用」后
+  //    本地数据不丢，无需等待 1.5s 防抖落盘（之前仅 flush 时落盘，窗口内重开即丢）。
   const commit = useCallback((next) => {
     dataRef.current = next
     setData(next)
+    try { localStorage.setItem(LS_DATA, JSON.stringify(next)) } catch { /* ignore */ }
   }, [])
 
   // ---------- 重新同步（双向合并 + 回推 + 二次合并） ----------
@@ -153,15 +157,17 @@ export function DataProvider({ children }) {
     if (!isSupabaseConfigured || syncingRef.current) return
     syncingRef.current = true
     try {
-      const local = dataRef.current
       const cloud = {}
       for (const t of TABLES) {
         const { data: rows, error } = await supabase.from(t).select('*').eq('user_id', wsId)
         if (!error && rows) cloud[t] = rows
       }
-      // 双向合并：本地 ∪ 云端，按 updated_at 取较新版本，删除标记双向同步
-      let merged = mergeData(local, cloud)
-      // 回推合并后的真相（修复：旧逻辑推的是合并前的旧本地数据，导致删除复活/新增消失）
+      // 双向合并：本地(最新快照) ∪ 云端，按 updated_at 取较新版本，删除标记双向同步。
+      // 注意：必须读「最新」的 dataRef.current，而不是函数开头捕获的快照——
+      // 否则在下方多次网络往返期间用户新增/修改的记录不会进入 merged，
+      // 最终 commit 会用旧快照覆盖掉这些记录，表现为「添加后无故消失」。
+      let merged = mergeData(dataRef.current, cloud)
+      // 回推合并后的真相（按 id 幂等 upsert，只影响我们发出的行）
       flushPending(wsId)
       try {
         for (const t of TABLES) {
@@ -169,15 +175,15 @@ export function DataProvider({ children }) {
           await pushRows(t, rows, wsId)
         }
       } catch { /* ignore */ }
-      // 二次合并：推完后云端已含对端刚推送的数据，再拉一次并合并，确保收敛
+      // 二次合并：推完后云端已含对端刚推送的数据，再拉一次并合并，确保收敛。
+      // 同样用最新 dataRef.current，捕获「推送期间」本端发生的新增/修改。
       const cloud2 = {}
       for (const t of TABLES) {
         const { data: rows2, error } = await supabase.from(t).select('*').eq('user_id', wsId)
         if (!error && rows2) cloud2[t] = rows2
       }
-      merged = mergeData(merged, cloud2)
+      merged = mergeData(dataRef.current, cloud2)
       commit(merged)
-      try { localStorage.setItem(LS_DATA, JSON.stringify(merged)) } catch { /* ignore */ }
       setCloudReady(true)
     } catch { /* ignore */ } finally { syncingRef.current = false }
   }, [wsId])

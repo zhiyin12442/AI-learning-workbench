@@ -60,6 +60,20 @@ create table if not exists todos (
 );
 alter table todos disable row level security;
 
+-- 8) 新建「每日工作（打卡）」表（user_id 不引用 auth.users，避免外键 409）
+--    checkins 为已打卡日期数组（'YYYY-MM-DD'），本地计算连续天数与历史记录。
+create table if not exists habits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  title text not null,
+  note text,
+  checkins text[] default '{}',
+  deleted boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table habits disable row level security;
+
 -- 6) 为 study_logs / resources 补 updated_at 列（其余 4 张表已有）。
 --    updated_at 是「按时间取最新」合并的基准；缺列会导致这两张表的新增/修改
 --    在同步时被对方旧版本覆盖（表现为「新增记录消失 / 编辑丢失」）。

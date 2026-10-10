@@ -93,6 +93,18 @@ create table if not exists todos (
   updated_at timestamptz default now()
 );
 
+-- 每日工作（打卡）
+create table if not exists habits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  title text not null,
+  note text,
+  checkins text[] default '{}',
+  deleted boolean default false,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ===== 迁移：移除对 auth.users 的外键（user_id 现在存放 workspace 同步码） =====
 alter table concepts drop constraint if exists concepts_user_id_fkey;
 alter table study_logs drop constraint if exists study_logs_user_id_fkey;
