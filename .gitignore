@@ -7,6 +7,9 @@ dist
 .env.local
 .env.*.local
 
+# 数据库自动迁移用的本地凭证（绝不入库；令牌可随时在 Supabase 后台撤销）
+supabase/.deploy-secrets.json
+
 # 日志与临时文件
 *.log
 npm-debug.log*

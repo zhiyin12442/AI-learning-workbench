@@ -11,5 +11,3 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_KEY
 
 export const supabase = createClient(url, key)
 export const isSupabaseConfigured = true
-
-export const TABLES = ['concepts', 'study_logs', 'resources', 'project_ideas', 'reviews', 'todos', 'habits']
