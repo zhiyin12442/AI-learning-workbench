@@ -153,15 +153,19 @@ export default function Sidebar({ mobile = false, onNavigate }) {
         </NavLink>
       </nav>
 
-      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">工具</p>
+      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1 mt-1">日常</p>
+      <nav className="flex flex-col gap-1 mb-4">
+        <NavLink to="/daily" className={itemCls} onClick={onNavigate}><Flame size={17} /> 每日工作</NavLink>
+        <NavLink to="/todos" className={itemCls} onClick={onNavigate}><CheckSquare size={17} /> 待办事项</NavLink>
+        <NavLink to="/studylog" className={itemCls} onClick={onNavigate}><NotebookPen size={17} /> 学习记录</NavLink>
+        <NavLink to="/reviews" className={itemCls} onClick={onNavigate}><History size={17} /> 经验复盘</NavLink>
+      </nav>
+
+      <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">项目</p>
       <nav className="flex flex-col gap-1">
         <NavLink to="/concepts" className={itemCls} onClick={onNavigate}><BookOpen size={17} /> 概念学习</NavLink>
-        <NavLink to="/studylog" className={itemCls} onClick={onNavigate}><NotebookPen size={17} /> 学习记录</NavLink>
         <NavLink to="/resources" className={itemCls} onClick={onNavigate}><FolderKanban size={17} /> 项目搜集</NavLink>
         <NavLink to="/projects" className={itemCls} onClick={onNavigate}><Lightbulb size={17} /> 项目灵感</NavLink>
-        <NavLink to="/todos" className={itemCls} onClick={onNavigate}><CheckSquare size={17} /> 待办事项</NavLink>
-        <NavLink to="/daily" className={itemCls} onClick={onNavigate}><Flame size={17} /> 每日工作</NavLink>
-        <NavLink to="/reviews" className={itemCls} onClick={onNavigate}><History size={17} /> 经验复盘</NavLink>
       </nav>
 
       <div className="mt-auto pt-8 flex flex-col gap-1">
