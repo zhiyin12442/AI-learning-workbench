@@ -126,11 +126,8 @@ function SyncStatus() {
 
 export function Header({ title }) {
   return (
-    <header className="mb-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-        <SyncStatus />
-      </div>
+    <header className="mb-6 flex items-center justify-end">
+      <SyncStatus />
     </header>
   )
 }
