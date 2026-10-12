@@ -17,3 +17,6 @@ preview-*.png
 .DS_Store
 .idea
 .vscode
+
+# 同步验证脚本的临时隔离备份（非用户数据）
+.verify-backup.json
