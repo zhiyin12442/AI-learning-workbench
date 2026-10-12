@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar, { MobileTabBar } from './components/Sidebar'
 import { Toast } from './components/ui'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useData } from './lib/store'
 import Dashboard from './pages/Dashboard'
 import Concepts from './pages/Concepts'
@@ -12,6 +12,25 @@ import ProjectIdeaDetail from './pages/ProjectIdeaDetail'
 import Reviews, { ReviewEditor } from './pages/Reviews'
 import Todos from './pages/Todos'
 import DailyWork from './pages/DailyWork'
+
+// 新版本可用提示：service worker 接管新版本时弹出，点击即刷新到最新代码
+function UpdateBanner() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const onUpdate = () => setShow(true)
+    window.addEventListener('nexdo:update-available', onUpdate)
+    return () => window.removeEventListener('nexdo:update-available', onUpdate)
+  }, [])
+  if (!show) return null
+  return (
+    <div
+      onClick={() => window.location.reload()}
+      className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[9999] bg-[#286ED3] text-white text-sm px-5 py-2.5 rounded-full shadow-lg cursor-pointer active:scale-95 transition-transform"
+    >
+      发现新版本，点击更新
+    </div>
+  )
+}
 
 function Shell() {
   const [mobileNav, setMobileNav] = useState(false)
@@ -53,6 +72,7 @@ function Shell() {
       </div>
       <MobileTabBar />
       <Toast msg={toast} />
+      <UpdateBanner />
     </div>
   )
 }
