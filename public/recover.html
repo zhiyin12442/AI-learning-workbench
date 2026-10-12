@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>数据抢救 · Nexdo</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; margin: 0; background: #f5f6f8; color: #1f2329; padding: 24px; line-height: 1.6; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #6b7280; font-size: 13px; margin-bottom: 18px; }
+  .banner { background: #e8f3ff; border: 1px solid #b3d8ff; color: #1d4e89; padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 18px; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  th { color: #6b7280; font-weight: 600; font-size: 12px; }
+  .ok { color: #16a34a; font-weight: 600; }
+  .warn { color: #dc2626; font-weight: 600; }
+  .empty { color: #9ca3af; }
+  .hl { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 10px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; }
+  button { background: #286ED3; color: #fff; border: none; padding: 11px 18px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+  button:active { transform: translateY(1px); }
+  .note { font-size: 12px; color: #6b7280; margin-top: 10px; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>数据抢救工具</h1>
+  <div class="sub">本页读取你当前浏览器里 Nexdo 的本地数据，不连接云端、不修改任何内容。</div>
+
+  <div class="banner">
+    ⚠️ 请用<strong>电脑端浏览器</strong>打开本页（与 Nexdo 同一域名 <code>ai-learning-workbench.pages.dev</code>），才能读到你电脑上保存的记录。<br/>
+    如果在 iPad 上打开，读到的是 iPad 的本地数据（已清空，会显示为空）——这是正常的。
+  </div>
+
+  <div id="hl"></div>
+  <div class="card">
+    <table id="tbl">
+      <thead><tr><th>板块</th><th>本地记录数</th><th>最近更新时间</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="note">「最近更新时间」为 UTC。带 <span class="ok">●</span> 且日期 ≥ 10-11 的记录，就是你担心的「这两天」数据，它们安好地存在本机。</div>
+  </div>
+
+  <button id="dl">下载我的全部数据备份（JSON）</button>
+  <div class="note">下载后请妥善保存这个文件。后续无论云端是否恢复，你都有了属于自己的离线副本。</div>
+</div>
+
+<script>
+  const LABELS = {
+    concepts: '概念学习', study_logs: '学习记录', resources: '项目搜集',
+    project_ideas: '项目灵感', reviews: '经验复盘', todos: '待办事项', habits: '每日工作'
+  }
+  const KEY = 'nexdo-data'
+  function fmt(d){ if(!d) return '—'; try { return new Date(d).toISOString().slice(0,16).replace('T',' ') } catch { return d } }
+
+  let raw = null, parsed = null
+  try { raw = localStorage.getItem(KEY); parsed = raw ? JSON.parse(raw) : null } catch(e) { parsed = null }
+
+  const tbody = document.getElementById('tbody')
+  const hl = document.getElementById('hl')
+  if (!parsed || typeof parsed !== 'object') {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty">本浏览器没有读到任何 Nexdo 本地数据（可能你是在 iPad 上打开，或从未在此浏览器使用过）。</td></tr>'
+  } else {
+    let total = 0, recent = 0
+    for (const k of Object.keys(LABELS)) {
+      const arr = Array.isArray(parsed[k]) ? parsed[k] : []
+      const live = arr.filter(r => !(r && r.deleted))
+      total += live.length
+      let max = null
+      for (const r of live) if (r.updated_at && (!max || r.updated_at > max)) max = r.updated_at
+      const isRecent = max && max >= '2026-10-11'
+      if (isRecent) recent += live.length
+      const tr = document.createElement('tr')
+      tr.innerHTML = `<td>${LABELS[k]}</td><td>${live.length}</td><td class="${isRecent?'ok':''}">${fmt(max)}</td>`
+      tbody.appendChild(tr)
+    }
+    if (recent > 0) {
+      hl.className = 'hl'
+      hl.innerHTML = `✅ 已在本机找到 ${recent} 条「10-11 及之后」的记录，它们没有丢失，点下方按钮即可下载备份。`
+    } else {
+      hl.className = 'banner'
+      hl.innerHTML = '本机本地数据里没有发现 10-11 之后的记录（这些可能只在已被清空的 iPad 上记过，或记在另一台设备）。'
+    }
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td><strong>合计</strong></td><td><strong>${total}</strong></td><td></td>`
+    tbody.appendChild(tr)
+  }
+
+  document.getElementById('dl').addEventListener('click', () => {
+    if (!parsed) { alert('没有可下载的数据。请确认是用电脑浏览器打开本页。'); return }
+    const blob = new Blob([JSON.stringify(parsed, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'nexdo-backup-' + new Date().toISOString().slice(0,10) + '.json'
+    a.click()
+    URL.revokeObjectURL(a.href)
+  })
+</script>
+</body>
+</html>

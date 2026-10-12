@@ -1,0 +1,986 @@
+{
+  "concepts": [
+    {
+      "id": "91938ff3-e13a-4d46-800d-950c8aacfabc",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "未分组",
+      "name": "saas",
+      "description": "Software as a Service（软件即服务）\n指不需要自己安装、部署、维护，直接通过浏览器或 App 就能使用的在线软件服务。你按订阅付费（或者免费），软件和数据都在提供商的服务器上，你不用关心背后的技术。",
+      "tags": [],
+      "pinned": null,
+      "created_at": "2026-10-06T06:57:39.988+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": null
+    },
+    {
+      "id": "498bbdf1-0890-4ea6-8a65-d11b5beff9e6",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "API",
+      "description": "前后端之间传数据",
+      "tags": [
+        "后端+前端"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:53:02.002+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "8684e447-3ad8-48d6-92e7-cd18c18395bd",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "未分组",
+      "name": "md",
+      "description": "全称Markdown\n是一种极简的文档排版语言，它让你用纯文本就能写出带标题、加粗、列表、链接、表格等格式的文档，而且任何地方都能看懂。",
+      "tags": [],
+      "pinned": null,
+      "created_at": "2026-10-06T06:55:48.201+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": null
+    },
+    {
+      "id": "b70e1657-4814-4d43-820e-394baba29e4d",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "CLI",
+      "description": "用打字下命令操作电脑的黑色窗口界面。跑npm、node命令就是CLI",
+      "tags": [
+        "工具链"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:53:58.15+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "6376d123-5e1a-52ca-aa18-dbd485d36ad9",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "前端知识",
+      "name": "闭包与作用域",
+      "description": "闭包是指函数能够记住并访问其词法作用域，即使函数在其作用域之外执行。常用于私有变量、柯里化和回调。",
+      "tags": [
+        "JavaScript",
+        "基础"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-03T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "c3f0f3e0-686d-5f9e-a517-25f3f7b025d1",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "前端知识",
+      "name": "React Fiber 架构",
+      "description": "Fiber 是 React 16 引入的协调引擎，将渲染拆分为可中断的小任务单元，支持时间切片与优先级调度。",
+      "tags": [
+        "React",
+        "源码"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-08T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "d6d088dc-197a-5eda-9c84-54d6ac5334a9",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "前端知识",
+      "name": "CSS 容器查询",
+      "description": "@container 让组件根据父容器尺寸而非视口响应式变化，适合组件库与设计系统场景。",
+      "tags": [
+        "CSS"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-13T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "01ead5af-d8b8-5a6d-981c-95f865cdd29c",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "后端知识",
+      "name": "数据库索引原理",
+      "description": "B+ 树索引将数据按序存储，叶子节点链表遍历适合范围查询；联合索引遵循最左前缀匹配。",
+      "tags": [
+        "数据库",
+        "性能"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-15T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "62b122d4-7109-5be3-81d0-a1708043440e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "后端知识",
+      "name": "JWT 与 Session 对比",
+      "description": "JWT 无状态、适合分布式；Session 有状态、便于主动失效。选型取决于是否需要服务端撤销能力。",
+      "tags": [
+        "认证"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-21T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "ef73fbf9-0307-5fbe-84dd-53eb6b602cd4",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "AI 概念",
+      "name": "Embedding 向量",
+      "description": "将文本映射为高维向量，语义相近的文本距离更近，是语义检索与 RAG 的基石。",
+      "tags": [
+        "AI",
+        "RAG"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-24T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "ffc2bebb-a074-5188-ac36-b3694a5e3573",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "AI 概念",
+      "name": "RAG 检索增强生成",
+      "description": "先检索知识库片段再交给 LLM 生成答案，可缓解幻觉并支持私有知识。",
+      "tags": [
+        "AI",
+        "RAG"
+      ],
+      "pinned": null,
+      "created_at": "2026-09-28T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "95f16067-1a04-512e-9114-5aff2ab649da",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "AI 概念",
+      "name": "Prompt few-shot 技巧",
+      "description": "通过在提示词中给出少量示例，引导模型输出格式与风格，比零样本更稳定。",
+      "tags": [
+        "AI",
+        "Prompt"
+      ],
+      "pinned": null,
+      "created_at": "2026-10-01T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": true
+    },
+    {
+      "id": "65a6f90a-cb57-434a-b58b-08ee55c947a2",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "CSS3",
+      "description": "决定颜色、字体、大小、位置、好不好看",
+      "tags": [],
+      "pinned": false,
+      "created_at": "2026-09-29T05:53:12.084+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "7befc1b0-904a-437b-99b3-b8dc0c03479c",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "HTML5",
+      "description": "决定页面有哪些内容：标题、按钮、文字、图片",
+      "tags": [],
+      "pinned": false,
+      "created_at": "2026-09-29T05:52:50.902+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "cae55a13-e005-41c9-8fc9-d349642de58c",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "IndexedDB",
+      "description": "浏览器本地的大型数据库，能存图片、文件等大量数据",
+      "tags": [
+        "前端"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:52:03.53+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "87f221b3-b33b-4611-aab4-329fdfe77b3e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "localStorage",
+      "description": "浏览器本地的小仓库，存简单数据，关掉网页还在",
+      "tags": [
+        "前端"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:51:39.284+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "549cc001-0e7b-4a96-8d6d-7dfa5f7c4985",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "Service Worker",
+      "description": "浏览器后台运行的脚本，能让网页离线也能打开、做缓存",
+      "tags": [
+        "前端"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:50:54.768+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "90459e97-ff61-4b38-8fd0-08c08bf3ff08",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "Supabase",
+      "description": "提供数据库、登录、存储等后端能力的云服务",
+      "tags": [
+        "后端/云服务"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:50:34.395+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "8f0aa643-4293-44e8-b2fd-5d40d2a4c3f0",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "Node.js",
+      "description": "让JavaScript能在电脑/服务器上运行的环境，不只在浏览器",
+      "tags": [
+        "后端"
+      ],
+      "pinned": false,
+      "created_at": "2026-09-29T06:49:59.533+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "ff71c245-9dc2-4e34-b738-ca058299e14b",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "TypeScript",
+      "description": "给JavaScript加了安全锁的升级版，填错类型立刻报错",
+      "tags": [],
+      "pinned": false,
+      "created_at": "2026-09-29T05:54:36.327+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "739bdbf0-a8e2-427b-b90e-54c4fe1cf49b",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "React",
+      "description": "把网页拆成一个个小积木（组件），改哪里就动哪块，不用重拆整页",
+      "tags": [],
+      "pinned": false,
+      "created_at": "2026-09-29T05:54:13.317+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    },
+    {
+      "id": "305c6a86-7295-4aad-b3b9-d935211494ac",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "group_name": "技术栈",
+      "name": "JavaScript",
+      "description": "让页面能动起来：点击、弹窗、保存数据、交互效果",
+      "tags": [],
+      "pinned": false,
+      "created_at": "2026-09-29T05:53:35.617+00:00",
+      "updated_at": "2026-10-06T07:26:08.847596+00:00",
+      "deleted": false
+    }
+  ],
+  "study_logs": [
+    {
+      "id": "2f3b2be9-3f22-5651-927a-e90861304993",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "微前端方案对比",
+      "study_date": "2026-09-19",
+      "platform": "B站",
+      "topic": "架构",
+      "duration_minutes": 44,
+      "note": "",
+      "skill_installed": false,
+      "created_at": "2026-09-19T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "44967621-788e-4e62-9638-becbb58d599a",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "怎么让 AI Coding 出来的产品原型更好看？",
+      "study_date": "2026-09-29",
+      "platform": null,
+      "topic": null,
+      "duration_minutes": null,
+      "note": "1.定技术栈\n2.定Ui设计规范\n3.找页面灵感\n4.找设计素材",
+      "skill_installed": false,
+      "created_at": "2026-09-29T06:48:21.135+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "d7a93129-9058-5b99-9b85-8ec68856602e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "Tailwind CSS 设计系统实战",
+      "study_date": "2026-10-03",
+      "platform": "YouTube",
+      "topic": "前端",
+      "duration_minutes": 38,
+      "note": "设计 token 落地方式",
+      "skill_installed": false,
+      "created_at": "2026-10-03T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "fd9be9c7-02f1-5304-8073-d5449407b980",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "React Hooks 深入解析",
+      "study_date": "2026-10-03",
+      "platform": "B站",
+      "topic": "前端",
+      "duration_minutes": 45,
+      "note": "useEffect 依赖数组与闭包陷阱",
+      "skill_installed": true,
+      "created_at": "2026-10-03T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "ffc125b9-cc70-5bb4-8be0-104d080c5c1b",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "RAG 系统从零搭建",
+      "study_date": "2026-10-01",
+      "platform": "慕课网",
+      "topic": "AI",
+      "duration_minutes": 66,
+      "note": "chunk 策略对召回率影响很大",
+      "skill_installed": false,
+      "created_at": "2026-10-01T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "d8952426-c2ec-5ba2-95c7-17d560de2207",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "Supabase Row Level Security 详解",
+      "study_date": "2026-10-05",
+      "platform": "B站",
+      "topic": "后端",
+      "duration_minutes": 52,
+      "note": "policy 的 using 与 with check 区别",
+      "skill_installed": true,
+      "created_at": "2026-10-05T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "2313673b-2540-5857-9652-5f5811693b13",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "Vite 插件机制剖析",
+      "study_date": "2026-09-30",
+      "platform": "B站",
+      "topic": "工程化",
+      "duration_minutes": 40,
+      "note": "",
+      "skill_installed": false,
+      "created_at": "2026-09-30T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "5cf372e0-06cc-54ac-840e-062fcb9e7c68",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "大模型 Agent 入门",
+      "study_date": "2026-09-29",
+      "platform": "YouTube",
+      "topic": "AI",
+      "duration_minutes": 58,
+      "note": "工具调用循环",
+      "skill_installed": true,
+      "created_at": "2026-09-29T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "4e85e0c2-e402-5bc4-bda3-c5e0ca74581e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "TypeScript 类型体操精选",
+      "study_date": "2026-09-27",
+      "platform": "B站",
+      "topic": "前端",
+      "duration_minutes": 47,
+      "note": "",
+      "skill_installed": false,
+      "created_at": "2026-09-27T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "7ffb67ef-18fd-5a12-a14e-194539de2678",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "PostgreSQL 查询优化",
+      "study_date": "2026-09-26",
+      "platform": "极客时间",
+      "topic": "后端",
+      "duration_minutes": 35,
+      "note": "explain analyze 实操",
+      "skill_installed": false,
+      "created_at": "2026-09-26T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "42456d94-7a48-5092-9661-dc89a4ecd57d",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "React Server Components 讲解",
+      "study_date": "2026-09-25",
+      "platform": "YouTube",
+      "topic": "前端",
+      "duration_minutes": 62,
+      "note": "",
+      "skill_installed": false,
+      "created_at": "2026-09-25T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "30b6d98e-8bc2-5ed2-8f44-5b105d71657a",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "Embedding 模型选型指南",
+      "study_date": "2026-09-23",
+      "platform": "B站",
+      "topic": "AI",
+      "duration_minutes": 29,
+      "note": "bge 与 openai 对比",
+      "skill_installed": false,
+      "created_at": "2026-09-23T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "6bcb0e3d-73ae-5253-a3e8-7d8aa78c8177",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "video_name": "前端性能优化全景图",
+      "study_date": "2026-09-21",
+      "platform": "慕课网",
+      "topic": "前端",
+      "duration_minutes": 71,
+      "note": "",
+      "skill_installed": false,
+      "created_at": "2026-09-21T00:00:00+00:00",
+      "deleted": false,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    }
+  ],
+  "resources": [
+    {
+      "id": "84d47382-6e45-45eb-b444-7509b445de90",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "boknows-text-image-template",
+      "url": "",
+      "description": "网页文字效果用图片填充 鼠标移动会有交互动态效果",
+      "installed": false,
+      "created_at": "2026-10-08T10:54:28.93+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:54:31.064485+00:00"
+    },
+    {
+      "id": "d7c686eb-1563-45fc-af1c-abae9ca5d2c0",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "vaeen ai design",
+      "url": "",
+      "description": "复古手绘纸张效果图片",
+      "installed": false,
+      "created_at": "2026-10-08T10:38:42.852+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:38:44.576324+00:00"
+    },
+    {
+      "id": "994163a3-c25d-4793-be30-d4cd47fe8873",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "website",
+      "name": "hyperknow",
+      "url": "",
+      "description": "Ai学习网站 每日有免费额度",
+      "installed": false,
+      "created_at": "2026-10-08T10:36:55.107+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:36:56.932877+00:00"
+    },
+    {
+      "id": "52d092c1-8cea-4ed5-8ca6-5828af1645f6",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "ian xiaohei illustrations",
+      "url": "",
+      "description": "人物动作视频 跟随鼠标转动",
+      "installed": false,
+      "created_at": "2026-10-08T10:23:42.171+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:23:43.916815+00:00"
+    },
+    {
+      "id": "90283973-6109-466e-9e8c-a5a0a10dba9f",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "oil motion",
+      "url": "",
+      "description": "跟随指标转动 例如人物眼睛",
+      "installed": false,
+      "created_at": "2026-10-08T10:22:22.183+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:22:23.90717+00:00"
+    },
+    {
+      "id": "46d6cbe7-edee-40fd-b8b8-daa156b5527e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "Auto-Optimize",
+      "url": "",
+      "description": "gilbertwuu/Auto-Optimize\n它会按照你的问题，先拆分成三到五个不同的维度来定义什么是“好看”，然后每个维度下面会生成几个不同程度的Prompt，让他们各自生成，打分和迭代！最后看看哪个Prompt的输出效果更好，哪个更好选哪个！\n所以他其实是一套内部自我生成，修改和迭代的Skill！特别适合很多你说不清楚自己要什么的那些情况！",
+      "installed": false,
+      "created_at": "2026-10-08T06:53:02.133+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T06:53:04.355916+00:00"
+    },
+    {
+      "id": "5120a76c-12e6-46ea-93b1-2d72696d63b4",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "Impeccable",
+      "url": "",
+      "description": "AI编程审美skill，偏审计+打磨+反模式",
+      "installed": false,
+      "created_at": "2026-10-08T06:35:26.122+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T06:35:29.146033+00:00"
+    },
+    {
+      "id": "a10f7024-988e-432f-aa2d-f89de06c29df",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "Taste Skill",
+      "url": "",
+      "description": "AI编程审美skill，防“AI模板味”",
+      "installed": false,
+      "created_at": "2026-10-08T06:34:38.458+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T06:34:41.29634+00:00"
+    },
+    {
+      "id": "704c5b41-3acb-49d3-b3ca-45d09016ae72",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "website",
+      "name": "Minimal Gallery",
+      "url": "",
+      "description": "一个人工精选的极简网页灵感库。可以让ai进行参照",
+      "installed": false,
+      "created_at": "2026-10-08T06:33:59.661+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T06:34:04.076547+00:00"
+    },
+    {
+      "id": "bb71e023-5247-5ae3-93dc-168b0fb1b499",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "website",
+      "name": "react.dev",
+      "url": "https://react.dev/",
+      "description": "React 官方新文档，含交互式教程",
+      "installed": false,
+      "created_at": "2026-09-11T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "5779a4f4-529c-53aa-a6e1-cb58604eadc5",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "vite-pwa-kit",
+      "url": "https://vite-pwa-org.netlify.app/",
+      "description": "Vite 项目一键 PWA 化",
+      "installed": false,
+      "created_at": "2026-09-27T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "fe60ca69-185a-5e2f-9148-521e277e5708",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "project",
+      "name": "excalidraw",
+      "url": "https://github.com/excalidraw/excalidraw",
+      "description": "白板应用架构与 Canvas 渲染方案",
+      "installed": false,
+      "created_at": "2026-09-24T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "eaa370d8-aea9-453e-9158-51880a1e0fce",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "Garden Skills",
+      "url": "https://github.com/ConardLi/garden-skills",
+      "description": "- 喂一篇文章，直接产出一个**边点边走的录屏演示网页**，还能配 TTS 旁白 —— 做课程 / 技术分享视频省掉剪辑\n- 让 AI 写落地页时，从 \"模板感网页\" 变成 \"像 Linear/Aesop 那样有设计判断的网页\"\n- 出图不再靠你硬憋 prompt，直接选模板改内容\n- 最重要的参考价值：**它是一份 \"好 Skill 怎么写\" 的教科书**——description 怎么写才会被正确触发、references/scripts/assets 怎么分层、什么时候该设硬 checkpoint，你都可以照着改自己的技能。",
+      "installed": false,
+      "created_at": "2026-10-03T07:04:30.638+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "fae2df89-c611-5bc9-b592-52c3cc761324",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "supabase-schema-designer",
+      "url": "https://github.com/topics/supabase",
+      "description": "快速设计带 RLS 的表结构",
+      "installed": true,
+      "created_at": "2026-09-16T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "c402f6a2-278e-5c7c-83ac-e0495286ee9a",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "tailwind-tokens-sync",
+      "url": "https://tailwindcss.com/docs/configuration",
+      "description": "设计 token 与 Tailwind 配置同步",
+      "installed": true,
+      "created_at": "2026-09-18T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "f20d6709-134a-532b-a074-62a64301cea1",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "rag-pipeline-starter",
+      "url": "https://github.com/vercel/ai",
+      "description": "RAG 检索问答最小可用流水线",
+      "installed": false,
+      "created_at": "2026-09-26T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "e823cff7-5194-5218-a1b4-672b48354924",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "project",
+      "name": "shadcn/ui",
+      "url": "https://ui.shadcn.com/",
+      "description": "可复制粘贴的组件源码库，学习组件设计",
+      "installed": false,
+      "created_at": "2026-09-21T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "cc0c76b8-b106-5122-aa99-2405707b43a9",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "website",
+      "name": "MDN Web Docs",
+      "url": "https://developer.mozilla.org/zh-CN/",
+      "description": "Web 标准权威文档",
+      "installed": false,
+      "created_at": "2026-09-06T00:00:00+00:00",
+      "deleted": true,
+      "updated_at": "2026-10-06T12:14:20.042909+00:00"
+    },
+    {
+      "id": "3325a893-cec3-405a-96d8-e15c559cdcef",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "website",
+      "name": "cola skill",
+      "url": "",
+      "description": "热门skills的网站 中文版",
+      "installed": false,
+      "created_at": "2026-10-08T10:17:05.283+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-08T10:17:07.069965+00:00"
+    },
+    {
+      "id": "704a135d-1c74-4f8a-9bb9-3ae18afa3b7a",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "category": "skill",
+      "name": "prompt optimizer",
+      "url": "",
+      "description": "提示词优化工具 打开是应用",
+      "installed": false,
+      "created_at": "2026-10-10T07:38:03.951+00:00",
+      "deleted": null,
+      "updated_at": "2026-10-10T07:38:05.969974+00:00"
+    }
+  ],
+  "project_ideas": [
+    {
+      "id": "9dd66360-ad7b-4fdc-bb48-478f8888bf82",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "夏日显化书桌",
+      "status": "未开始",
+      "goal": "漂亮的界面 带有日记和记录交互",
+      "stack": [],
+      "required_skills": null,
+      "steps": null,
+      "reference_links": null,
+      "notes": null,
+      "archived": false,
+      "pinned": null,
+      "created_at": "2026-10-06T07:15:44.077+00:00",
+      "updated_at": "2026-10-06T07:26:10.373911+00:00",
+      "deleted": null
+    },
+    {
+      "id": "9f53fbbb-9415-4adf-b3a9-522cc783d47e",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "人生卡片",
+      "status": "未开始",
+      "goal": "打造人生支线任务 创造记忆点",
+      "stack": [],
+      "required_skills": null,
+      "steps": null,
+      "reference_links": null,
+      "notes": "1️⃣Diy自己的形象 选择最满意的照片来生成\n2️⃣系统Ai每日随机一个小任务\n3️⃣用户完成目标\n4️⃣根据任务内容结合Diy形象生成特定风格的卡片\n5️⃣卡片册 查看已获得的所有卡片",
+      "archived": false,
+      "pinned": null,
+      "created_at": "2026-10-06T07:00:54.709+00:00",
+      "updated_at": "2026-10-06T07:26:10.373911+00:00",
+      "deleted": null
+    },
+    {
+      "id": "3387055d-72a6-541e-8854-f04c24457756",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "AI 学习工作台",
+      "status": "进行中",
+      "goal": "把概念、视频、资源、项目、复盘集中在一个工作台里管理学习闭环。",
+      "stack": [
+        "React",
+        "Tailwind",
+        "Supabase"
+      ],
+      "required_skills": [
+        "supabase-schema-designer",
+        "tailwind-tokens-sync"
+      ],
+      "steps": [
+        {
+          "done": true,
+          "text": "设计数据模型与 RLS 策略"
+        },
+        {
+          "done": true,
+          "text": "实现 Dashboard 总览"
+        },
+        {
+          "done": true,
+          "text": "实现六大板块页面"
+        },
+        {
+          "done": false,
+          "text": "接入 Supabase 认证与同步"
+        },
+        {
+          "done": false,
+          "text": "响应式与 iPad 适配"
+        }
+      ],
+      "reference_links": [
+        "https://react.dev/",
+        "https://supabase.com/docs"
+      ],
+      "notes": "先跑通本地演示模式，再无缝切到云端。",
+      "archived": false,
+      "pinned": true,
+      "created_at": "2026-09-15T00:00:00+00:00",
+      "updated_at": "2026-10-10T00:00:00+00:00",
+      "deleted": null
+    },
+    {
+      "id": "0db0f373-7be7-5dd4-b87c-016e9d40aaf9",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "RAG 知识库助手",
+      "status": "进行中",
+      "goal": "基于个人笔记构建一个可问答的私有知识库。",
+      "stack": [
+        "Next.js",
+        "pgvector",
+        "OpenAI"
+      ],
+      "required_skills": [],
+      "steps": [
+        {
+          "done": true,
+          "text": "调研 embedding 方案"
+        },
+        {
+          "done": false,
+          "text": "实现文档切片与入库"
+        },
+        {
+          "done": false,
+          "text": "实现检索问答 UI"
+        }
+      ],
+      "reference_links": [
+        "https://js.langchain.com/"
+      ],
+      "notes": "",
+      "archived": false,
+      "pinned": false,
+      "created_at": "2026-09-21T00:00:00+00:00",
+      "updated_at": "2026-10-08T06:26:11.361+00:00",
+      "deleted": true
+    },
+    {
+      "id": "c1b7bee5-2ab0-5072-92e5-c7cbade8d06a",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "个人博客重构",
+      "status": "未开始",
+      "goal": "用 VitePress 重构博客并加入深色模式与全文搜索。",
+      "stack": [
+        "VitePress"
+      ],
+      "required_skills": [],
+      "steps": [
+        {
+          "done": false,
+          "text": "梳理旧文章结构"
+        }
+      ],
+      "reference_links": [],
+      "notes": "",
+      "archived": false,
+      "pinned": false,
+      "created_at": "2026-09-25T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:10.373911+00:00",
+      "deleted": true
+    },
+    {
+      "id": "388b73d8-d6da-50ed-ba06-fa5487a64ed8",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "name": "打卡热力图小组件",
+      "status": "已完成",
+      "goal": "做一个类似 GitHub contributions 的学习打卡热力图。",
+      "stack": [
+        "React",
+        "date-fns"
+      ],
+      "required_skills": [],
+      "steps": [
+        {
+          "done": true,
+          "text": "设计数据结构"
+        },
+        {
+          "done": true,
+          "text": "渲染 12 周网格"
+        }
+      ],
+      "reference_links": [],
+      "notes": "已沉淀为可复用组件。",
+      "archived": false,
+      "pinned": false,
+      "created_at": "2026-08-27T00:00:00+00:00",
+      "updated_at": "2026-10-08T06:23:56.588+00:00",
+      "deleted": true
+    }
+  ],
+  "reviews": [
+    {
+      "id": "3d3a8b4d-c44d-54c3-87f4-52634d401c72",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "title": "同事分享的 RLS 踩坑记录",
+      "body": "RLS 策略只写 using 不写 with check 时，insert 会被默认策略拦截。所有 for all 策略建议两个子句都显式声明。",
+      "source": "他人",
+      "linked_items": [
+        "AI 学习工作台"
+      ],
+      "tags": [
+        "Supabase",
+        "安全"
+      ],
+      "mood": "实用",
+      "created_at": "2026-09-17T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:10.628949+00:00",
+      "deleted": true
+    },
+    {
+      "id": "b8014577-9a23-4210-94df-4c69f3133478",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "title": "怎样把代码写对写好",
+      "body": "1.准备一份项目说明书 让Ai确定好下面信息\n产品说明-技术栈-目录说明-页面设计-编码选择\n\n2.拆分成一个个小步骤 单独去让ai完成\n任务-上下文-约束-验收\n\n3.先让ai分析问题和报错 再进行修改\n\n4.让Ai修改后再总结在record.md当中\n\n5.善用skill\n前端设计用fronted-design和impeccable视觉设计\n代码开发用spec-driven-development整理说明\n代码审查用code-review-and-quality多维度检查代码\n\n6.使用git\n给Ai留后路 用于版本管理\n每完成一个重要阶段就保存一次",
+      "source": "自己",
+      "linked_items": [],
+      "tags": [],
+      "mood": "有触动",
+      "created_at": "2026-10-06T06:58:47.716+00:00",
+      "updated_at": "2026-10-06T07:26:10.628949+00:00",
+      "deleted": null
+    },
+    {
+      "id": "563414fe-0627-5a12-9ef2-b042a1ea2797",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "title": "AI 辅助编程的三个心得",
+      "body": "1. 提示词里给足上下文，比反复追问高效；2. 让 AI 先出方案再写码，减少返工；3. 关键逻辑一定自己过一遍，AI 的自信不等于正确。",
+      "source": "自己",
+      "linked_items": [
+        "AI 学习工作台"
+      ],
+      "tags": [
+        "AI",
+        "方法"
+      ],
+      "mood": "收获很大",
+      "created_at": "2026-10-02T00:00:00+00:00",
+      "updated_at": "2026-10-08T06:26:48.394+00:00",
+      "deleted": true
+    },
+    {
+      "id": "7c19d74a-8996-513c-a161-7d6118e0f502",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "title": "看视频学习的效率陷阱",
+      "body": "只看不练等于没学。以后每条学习记录强制关联一个动手产出：一段代码、一篇笔记或一个 demo。",
+      "source": "自己",
+      "linked_items": [
+        "学习记录"
+      ],
+      "tags": [
+        "学习方法"
+      ],
+      "mood": "有触动",
+      "created_at": "2026-09-25T00:00:00+00:00",
+      "updated_at": "2026-10-06T07:26:10.628949+00:00",
+      "deleted": null
+    },
+    {
+      "id": "6fab7422-21bd-4b46-ae6b-784e8093d6cd",
+      "user_id": "9f1c3b2a-7d4e-4a1b-8c5d-2e6f9a0b3c1d",
+      "title": "前端设计美化原则",
+      "body": "组合最省事：Minimal Gallery挑3张 → Taste定极简方向出首版 → Impeccable扫反模式打磨 → 写进你DESIGN.md长期用",
+      "source": "自己",
+      "linked_items": [],
+      "tags": [
+        "前端设计"
+      ],
+      "mood": "有触动",
+      "created_at": "2026-10-08T06:36:40.828+00:00",
+      "updated_at": "2026-10-08T06:36:40.828+00:00",
+      "deleted": null
+    }
+  ]
+}
