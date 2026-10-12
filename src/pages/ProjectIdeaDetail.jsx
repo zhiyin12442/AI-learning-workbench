@@ -201,7 +201,13 @@ export default function ProjectIdeaDetail() {
             className="card p-6 cursor-pointer hover:shadow-card-shadow transition-shadow"
             onClick={() => openView('notes')}
           >
-            <p className="text-sm font-semibold text-gray-800 mb-3">进度备注</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-gray-800">进度备注</p>
+              <button
+                onClick={(e) => { e.stopPropagation(); openEdit('notes') }}
+                className="inline-flex items-center gap-1 text-xs text-ink-soft hover:text-primary px-2 py-1 rounded-[8px] hover:bg-gray-50 min-h-[36px]"
+              ><Pencil size={13} /> 编辑</button>
+            </div>
             {project.notes ? (
               <p className="text-sm text-gray-700 whitespace-pre-wrap break-words line-clamp-3">{project.notes}</p>
             ) : (

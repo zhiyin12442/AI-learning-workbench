@@ -18,6 +18,8 @@ export default function Resources() {
   const [adding, setAdding] = useState(false)
   const [detail, setDetail] = useState(null) // 选中的资源
   const [confirm, setConfirm] = useState(null) // { id, name }
+  const [editRs, setEditRs] = useState(null) // 正在编辑的资源
+  const [draftRs, setDraftRs] = useState({ category: 'skill', name: '', url: '', description: '', field: '', installed: false })
 
   const isWeb = tab === 'website'
   const isSkill = tab === 'skill'
@@ -43,6 +45,33 @@ export default function Resources() {
     setAdding(false)
     setTab(category)
     showToast(`已收录「${name}」，好资源就该被沉淀。`)
+  }
+
+  // 打开编辑弹窗：把当前记录预填进草稿
+  const openEditRs = (r) => {
+    setDraftRs({
+      category: r.category || 'skill',
+      name: r.name || '',
+      url: r.url || '',
+      description: r.description || '',
+      field: r.field || '',
+      installed: !!r.installed,
+    })
+    setEditRs(r)
+  }
+  const saveEditRs = (e) => {
+    e.preventDefault()
+    upsert('resources', {
+      ...editRs,
+      category: draftRs.category,
+      name: draftRs.name.trim(),
+      url: draftRs.url,
+      description: draftRs.description,
+      field: draftRs.field,
+      installed: draftRs.installed,
+    })
+    setEditRs(null)
+    showToast('已保存修改。')
   }
 
   // 详情弹窗字段（按分类显示中文标签）
@@ -123,9 +152,10 @@ export default function Resources() {
           {rows.map((r) => (
             <SwipeRow
               key={r.id}
-              disableEdit
+              onEdit={() => openEditRs(r)}
               onDelete={canDelete ? () => setConfirm({ id: r.id, name: r.name || r.url }) : undefined}
               onTap={() => setDetail(r)}
+              editLabel="编辑"
               deleteLabel="删除"
             >
               <div
@@ -213,6 +243,46 @@ export default function Resources() {
         onCancel={() => setConfirm(null)}
         onConfirm={() => { remove('resources', confirm.id); showToast('资源已删除。'); setConfirm(null) }}
       />
+
+      {/* 编辑资源弹窗（左滑编辑按钮触发，与删除并列） */}
+      {editRs && (
+        <Modal title="编辑资源" onClose={() => setEditRs(null)}>
+          <form onSubmit={saveEditRs}>
+            <Field label="分类">
+              <select value={draftRs.category} onChange={(e) => setDraftRs({ ...draftRs, category: e.target.value })} className="w-full">
+                <option value="skill">Skill</option>
+                <option value="project">实战项目</option>
+                <option value="website">实用网站</option>
+              </select>
+            </Field>
+            {draftRs.category === 'website' ? (
+              <>
+                <Field label="链接"><input value={draftRs.url} onChange={(e) => setDraftRs({ ...draftRs, url: e.target.value })} type="url" placeholder="https://..." className="w-full" /></Field>
+                <Field label="用途"><input value={draftRs.name} onChange={(e) => setDraftRs({ ...draftRs, name: e.target.value })} required className="w-full" autoFocus /></Field>
+                <Field label="具体概念 / 方案"><textarea value={draftRs.description} onChange={(e) => setDraftRs({ ...draftRs, description: e.target.value })} rows={3} className="w-full" /></Field>
+              </>
+            ) : (
+              <>
+                <Field label="名称"><input value={draftRs.name} onChange={(e) => setDraftRs({ ...draftRs, name: e.target.value })} required className="w-full" autoFocus /></Field>
+                <Field label="链接"><input value={draftRs.url} onChange={(e) => setDraftRs({ ...draftRs, url: e.target.value })} type="url" placeholder="https://..." className="w-full" /></Field>
+                <Field label="具体概念 / 方案"><textarea value={draftRs.description} onChange={(e) => setDraftRs({ ...draftRs, description: e.target.value })} rows={3} className="w-full" /></Field>
+              </>
+            )}
+            {draftRs.category === 'skill' && (
+              <>
+                <Field label="领域（可自由填写，如：前端 / AI / 设计）"><input value={draftRs.field} onChange={(e) => setDraftRs({ ...draftRs, field: e.target.value })} placeholder="该 Skill 所属的领域" className="w-full" /></Field>
+                <label className="flex items-center gap-2 text-sm text-ink-soft mb-5 min-h-[44px] cursor-pointer">
+                  <input type="checkbox" checked={draftRs.installed} onChange={(e) => setDraftRs({ ...draftRs, installed: e.target.checked })} className="w-4 h-4 accent-success" /> 是否已安装
+                </label>
+              </>
+            )}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setEditRs(null)} className="btn-ghost min-h-[44px]">取消</button>
+              <button type="submit" className="btn-primary min-h-[44px]">保存</button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }
