@@ -218,7 +218,7 @@ export default function ProjectIdeaDetail() {
       </div>
 
       {/* ===== 完整详情弹窗（点击卡片） ===== */}
-      <Modal title={view === 'skills' ? '所需 Skills（完整）' : view === 'refs' ? '参考资料（完整）' : '进度备注（完整）'} onClose={() => setView(null)}>
+      <Modal open={!!view} title={view === 'skills' ? '所需 Skills（完整）' : view === 'refs' ? '参考资料（完整）' : '进度备注（完整）'} onClose={() => setView(null)}>
         {view === 'skills' && (
           skills.length === 0 ? <p className="text-sm text-ink-faint">还没有添加任何 Skill。</p> :
           <div className="flex flex-wrap gap-2">
@@ -255,7 +255,7 @@ export default function ProjectIdeaDetail() {
       </Modal>
 
       {/* ===== 编辑弹窗（点击编辑按钮） ===== */}
-      <Modal title={editing === 'skills' ? '编辑所需 Skills' : editing === 'refs' ? '编辑参考资料' : '编辑进度备注'} onClose={() => setEditing(null)}>
+      <Modal open={!!editing} title={editing === 'skills' ? '编辑所需 Skills' : editing === 'refs' ? '编辑参考资料' : '编辑进度备注'} onClose={() => setEditing(null)}>
         {editing === 'notes' ? (
           <Field label="进度备注">
             <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={8} placeholder="记录当前进展、卡点和下一步..." className="w-full" />

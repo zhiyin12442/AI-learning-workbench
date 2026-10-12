@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Pencil, Trash2, ExternalLink } from 'lucide-react'
 
-export function Modal({ title, onClose, children, wide = false, maxW }) {
+export function Modal({ title, onClose, children, wide = false, maxW, open = true }) {
+  if (!open) return null
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
